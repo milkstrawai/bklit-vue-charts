@@ -1,47 +1,47 @@
 <script setup lang="ts">
-import { area, curveMonotoneX, line } from "d3-shape";
-import type { CurveFactory } from "d3-shape";
-import { AnimatePresence, motion } from "motion-v";
-import { computed, useId } from "vue";
-import { useChart } from "../composables/use-chart";
-import type { ChartDatum, SeriesPointMarkerStyle } from "../context";
-import { HIGHLIGHT_SPRING, useHighlightSegment } from "../composables/use-highlight-segment";
+import { area, curveMonotoneX, line } from 'd3-shape'
+import type { CurveFactory } from 'd3-shape'
+import { AnimatePresence, motion } from 'motion-v'
+import { computed, useId } from 'vue'
+import { useChart } from '../composables/use-chart'
+import type { ChartDatum, SeriesPointMarkerStyle } from '../context'
+import { HIGHLIGHT_SPRING, useHighlightSegment } from '../composables/use-highlight-segment'
 
 interface AreaProps {
-  dataKey: string;
+  dataKey: string
   /** Y-scale group for biaxial charts (pair with a matching YAxis). */
-  yAxisId?: string;
+  yAxisId?: string
   /** D3 curve factory. Default: curveMonotoneX */
-  curve?: CurveFactory;
+  curve?: CurveFactory
   /** Fill color. Default: var(--chart-line-primary) */
-  fill?: string;
+  fill?: string
   /** Fill opacity at the top of the area. Default: 0.4 */
-  fillOpacity?: number;
+  fillOpacity?: number
   /** Fill opacity at the baseline. Default: 0 */
-  gradientToOpacity?: number;
+  gradientToOpacity?: number
   /** 0–1: where the bottom gradient stop sits (1 = full height). Default: 1 */
-  gradientSpan?: number;
+  gradientSpan?: number
   /** Stroke color; defaults to `fill`. */
-  stroke?: string;
-  strokeWidth?: number;
+  stroke?: string
+  strokeWidth?: number
   /** Skip the entrance reveal when false. Default: true */
-  animate?: boolean;
+  animate?: boolean
   /** Draw the line on top of the fill. Default: true */
-  showLine?: boolean;
+  showLine?: boolean
   /** Fade fill + stroke toward transparent at the chart edges. Default: false */
-  fadeEdges?: boolean;
-  showHighlight?: boolean;
+  fadeEdges?: boolean
+  showHighlight?: boolean
   /** Render ring markers at each data point. Default: false */
-  showMarkers?: boolean;
+  showMarkers?: boolean
   /** Point-marker styling (radius, fill, stroke, strokeWidth). */
-  markers?: SeriesPointMarkerStyle;
+  markers?: SeriesPointMarkerStyle
   /** Print each point's value above it. Default: false */
 }
 
 const props = withDefaults(defineProps<AreaProps>(), {
   curve: curveMonotoneX,
   animate: true,
-  fill: "var(--chart-line-primary)",
+  fill: 'var(--chart-line-primary)',
   fillOpacity: 0.4,
   gradientToOpacity: 0,
   gradientSpan: 1,
@@ -51,8 +51,8 @@ const props = withDefaults(defineProps<AreaProps>(), {
   fadeEdges: false,
   showHighlight: true,
   showMarkers: false,
-  markers: undefined,
-});
+  markers: undefined
+})
 
 const {
   data,
@@ -67,47 +67,47 @@ const {
   series,
   registerSeries,
   isSeriesHidden,
-  revealClipId,
-} = useChart();
+  revealClipId
+} = useChart()
 
-const hidden = computed(() => isSeriesHidden(props.dataKey));
-const yScale = computed(() => getYScale(props.yAxisId));
-const resolvedStroke = computed(() => props.stroke ?? props.fill);
-const midOffset = computed(
-  () => `${Math.min(1, Math.max(0.01, props.gradientSpan)) * 100}%`
-);
+const hidden = computed(() => isSeriesHidden(props.dataKey))
+const yScale = computed(() => getYScale(props.yAxisId))
+const resolvedStroke = computed(() => props.stroke ?? props.fill)
+const midOffset = computed(() => `${Math.min(1, Math.max(0.01, props.gradientSpan)) * 100}%`)
 
 registerSeries({
   dataKey: props.dataKey,
   color: resolvedStroke.value,
-  yAxisId: props.yAxisId,
-});
+  yAxisId: props.yAxisId
+})
 
 const seriesIndex = computed(() =>
-  Math.max(0, series.findIndex((s) => s.dataKey === props.dataKey))
-);
+  Math.max(
+    0,
+    series.findIndex((s) => s.dataKey === props.dataKey)
+  )
+)
 const dimmed = computed(
   () =>
     (props.showHighlight && hover.active) ||
     (legend.hoveredIndex !== null && legend.hoveredIndex !== seriesIndex.value)
-);
+)
 
 const markerPoints = computed(() =>
   props.showMarkers
     ? renderData.value.map((d, i) => ({
         key: i,
         cx: xScale.value(xAccessor(d)),
-        cy: yScale.value(d[props.dataKey] as number),
+        cy: yScale.value(d[props.dataKey] as number)
       }))
     : []
-);
+)
 const markerStyle = computed(() => ({
   radius: props.markers?.radius ?? 5,
-  fill: props.markers?.fill ?? "var(--chart-background)",
+  fill: props.markers?.fill ?? 'var(--chart-background)',
   stroke: props.markers?.stroke ?? resolvedStroke.value,
-  strokeWidth: props.markers?.strokeWidth ?? 2,
-}));
-
+  strokeWidth: props.markers?.strokeWidth ?? 2
+}))
 
 const areaD = computed(
   () =>
@@ -115,51 +115,44 @@ const areaD = computed(
       .x((d) => xScale.value(xAccessor(d)))
       .y0(innerHeight.value)
       .y1((d) => yScale.value(d[props.dataKey] as number))
-      .curve(props.curve)(renderData.value) ?? ""
-);
+      .curve(props.curve)(renderData.value) ?? ''
+)
 
 const lineD = computed(
   () =>
     line<ChartDatum>()
       .x((d) => xScale.value(xAccessor(d)))
       .y((d) => yScale.value(d[props.dataKey] as number))
-      .curve(props.curve)(renderData.value) ?? ""
-);
+      .curve(props.curve)(renderData.value) ?? ''
+)
 
-const uid = useId();
-const fillGradientId = `area-fill-${props.dataKey}-${uid}`;
-const strokeGradientId = `area-stroke-${props.dataKey}-${uid}`;
-const edgeGradientId = `area-edge-${props.dataKey}-${uid}`;
-const edgeMaskId = `area-edge-mask-${props.dataKey}-${uid}`;
+const uid = useId()
+const fillGradientId = `area-fill-${props.dataKey}-${uid}`
+const strokeGradientId = `area-stroke-${props.dataKey}-${uid}`
+const edgeGradientId = `area-edge-${props.dataKey}-${uid}`
+const edgeMaskId = `area-edge-mask-${props.dataKey}-${uid}`
 
 const visibleStroke = computed(() =>
   props.fadeEdges ? `url(#${strokeGradientId})` : resolvedStroke.value
-);
+)
 
-const highlightClipId = `area-highlight-${props.dataKey}-${uid}`;
+const highlightClipId = `area-highlight-${props.dataKey}-${uid}`
 const { segmentBounds, hoverEpoch } = useHighlightSegment({
   data,
   xScale,
   xAccessor,
-  hover,
-});
+  hover
+})
 
-const showHighlightStroke = computed(() => props.showHighlight && props.showLine);
+const showHighlightStroke = computed(() => props.showHighlight && props.showLine)
 </script>
 
 <template>
-  <g
-    v-if="!hidden"
-    :clip-path="animate && revealClipId ? `url(#${revealClipId})` : undefined"
-  >
+  <g v-if="!hidden" :clip-path="animate && revealClipId ? `url(#${revealClipId})` : undefined">
     <defs>
       <linearGradient :id="fillGradientId" x1="0%" x2="0%" y1="0%" y2="100%">
         <stop offset="0%" :stop-color="fill" :stop-opacity="fillOpacity" />
-        <stop
-          :offset="midOffset"
-          :stop-color="fill"
-          :stop-opacity="gradientToOpacity"
-        />
+        <stop :offset="midOffset" :stop-color="fill" :stop-opacity="gradientToOpacity" />
         <stop
           v-if="gradientSpan < 1"
           offset="100%"
@@ -269,5 +262,4 @@ const showHighlightStroke = computed(() => props.showHighlight && props.showLine
   </g>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -1,110 +1,97 @@
 <script setup lang="ts">
-import { useElementSize } from "@vueuse/core";
-import { motion } from "motion-v";
-import { computed, ref, shallowRef } from "vue";
-import { intFmt } from "../utils/chart-formatters";
-import {
-  funnelRingHoverScale,
-  funnelRingLayer,
-  funnelSegmentPath,
-} from "../utils/funnel-geometry";
+import { useElementSize } from '@vueuse/core'
+import { motion } from 'motion-v'
+import { computed, ref, shallowRef } from 'vue'
+import { intFmt } from '../utils/chart-formatters'
+import { funnelRingHoverScale, funnelRingLayer, funnelSegmentPath } from '../utils/funnel-geometry'
 
 export interface FunnelGradientStop {
-  offset: number | string;
-  color: string;
+  offset: number | string
+  color: string
 }
 
 export interface FunnelStage {
-  label: string;
-  value: number;
-  displayValue?: string;
+  label: string
+  value: number
+  displayValue?: string
   /** Solid color for this stage (overrides the chart `color`). */
-  color?: string;
+  color?: string
   /** Left→right gradient for this stage (overrides `color`). */
-  gradient?: FunnelGradientStop[];
+  gradient?: FunnelGradientStop[]
 }
 
 interface FunnelChartProps {
-  data: FunnelStage[];
-  color?: string;
+  data: FunnelStage[]
+  color?: string
   /** Number of concentric halo rings per segment. Default: 3 */
-  layers?: number;
+  layers?: number
   /** Gap between segments in pixels. Default: 4 */
-  gap?: number;
+  gap?: number
   /** Stagger delay between segment animations (seconds). Default: 0.12 */
-  staggerDelay?: number;
-  edges?: "curved" | "straight";
-  showPercentage?: boolean;
-  showValues?: boolean;
-  showLabels?: boolean;
-  formatPercentage?: (pct: number) => string;
-  formatValue?: (value: number) => string;
+  staggerDelay?: number
+  edges?: 'curved' | 'straight'
+  showPercentage?: boolean
+  showValues?: boolean
+  showLabels?: boolean
+  formatPercentage?: (pct: number) => string
+  formatValue?: (value: number) => string
 }
 
 const props = withDefaults(defineProps<FunnelChartProps>(), {
-  color: "var(--chart-1)",
+  color: 'var(--chart-1)',
   layers: 3,
   gap: 4,
   staggerDelay: 0.12,
-  edges: "curved",
+  edges: 'curved',
   showPercentage: true,
   showValues: true,
   showLabels: true,
   formatPercentage: (pct: number) => `${Math.round(pct)}%`,
-  formatValue: intFmt,
-});
+  formatValue: intFmt
+})
 
-const containerRef = ref<HTMLDivElement | null>(null);
-const { width, height } = useElementSize(containerRef);
-const hoveredIndex = shallowRef<number | null>(null);
+const containerRef = ref<HTMLDivElement | null>(null)
+const { width, height } = useElementSize(containerRef)
+const hoveredIndex = shallowRef<number | null>(null)
 
-const stageCount = computed(() => props.data.length);
+const stageCount = computed(() => props.data.length)
 const segmentWidth = computed(() =>
-  stageCount.value > 0
-    ? (width.value - props.gap * (stageCount.value - 1)) / stageCount.value
-    : 0
-);
+  stageCount.value > 0 ? (width.value - props.gap * (stageCount.value - 1)) / stageCount.value : 0
+)
 const norms = computed(() => {
-  const max = props.data[0]?.value ?? 1;
-  return props.data.map((stage) => stage.value / max);
-});
+  const max = props.data[0]?.value ?? 1
+  return props.data.map((stage) => stage.value / max)
+})
 
-function segmentPath(
-  normStart: number,
-  normEnd: number,
-  layerScale: number
-): string {
+function segmentPath(normStart: number, normEnd: number, layerScale: number): string {
   return funnelSegmentPath(
     normStart,
     normEnd,
     segmentWidth.value,
     height.value,
     layerScale,
-    props.edges === "straight"
-  );
+    props.edges === 'straight'
+  )
 }
 
 interface SegmentRing {
-  d: string;
-  opacity: number;
+  d: string
+  opacity: number
 }
 
 const segments = computed(() => {
-  const n = stageCount.value;
+  const n = stageCount.value
   return props.data.map((stage, i) => {
-    const normStart = norms.value[i] ?? 0;
-    const normEnd = norms.value[Math.min(i + 1, n - 1)] ?? 0;
-    const rings: SegmentRing[] = Array.from(
-      { length: props.layers },
-      (_, l) => {
-        const layer = funnelRingLayer(l, props.layers);
-        return {
-          d: segmentPath(normStart, normEnd, layer.scale),
-          opacity: layer.opacity,
-        };
+    const normStart = norms.value[i] ?? 0
+    const normEnd = norms.value[Math.min(i + 1, n - 1)] ?? 0
+    const rings: SegmentRing[] = Array.from({ length: props.layers }, (_, l) => {
+      const layer = funnelRingLayer(l, props.layers)
+      return {
+        d: segmentPath(normStart, normEnd, layer.scale),
+        opacity: layer.opacity
       }
-    );
-    const firstStop = stage.gradient?.[0];
+    })
+    const firstStop = stage.gradient?.[0]
     return {
       stage,
       rings,
@@ -112,48 +99,49 @@ const segments = computed(() => {
       gradient: stage.gradient,
       gradientId: `funnel-grad-${i}`,
       pct: (stage.value / (props.data[0]?.value ?? 1)) * 100,
-      display: stage.displayValue ?? props.formatValue(stage.value),
-    };
-  });
-});
+      display: stage.displayValue ?? props.formatValue(stage.value)
+    }
+  })
+})
 
 function stopOffset(offset: number | string): string {
-  return typeof offset === "number" ? `${offset * 100}%` : offset;
+  return typeof offset === 'number' ? `${offset * 100}%` : offset
 }
 
 function ringHoverTransition(ringIndex: number) {
   return {
-    type: "spring",
+    type: 'spring',
     stiffness: 300 - ringIndex * 60,
-    damping: 24 - ringIndex * 3,
-  } as const;
+    damping: 24 - ringIndex * 3
+  } as const
 }
 
 function ringHoverScale(ringIndex: number): number {
-  return funnelRingHoverScale(ringIndex, props.layers);
+  return funnelRingHoverScale(ringIndex, props.layers)
 }
 
 const ENTER_TRANSITION = {
-  type: "tween",
+  type: 'tween',
   duration: 1.1,
-  ease: [0.85, 0, 0.15, 1],
-} as const;
+  ease: [0.85, 0, 0.15, 1]
+} as const
 </script>
 
 <template>
-  <div
-    ref="containerRef"
-    class="funnel"
-    @pointerleave="hoveredIndex = null"
-  >
+  <div ref="containerRef" class="funnel" @pointerleave="hoveredIndex = null">
     <template v-if="width > 0 && height > 0">
       <div class="funnel-segments" :style="{ gap: `${gap}px` }">
         <motion.div
           v-for="(segment, i) in segments"
           :key="segment.stage.label"
           class="funnel-segment"
-          :style="{ width: `${segmentWidth}px`, zIndex: hoveredIndex === i ? 10 : 1 }"
-          :animate="{ opacity: hoveredIndex !== null && hoveredIndex !== i ? 0.4 : 1 }"
+          :style="{
+            width: `${segmentWidth}px`,
+            zIndex: hoveredIndex === i ? 10 : 1
+          }"
+          :animate="{
+            opacity: hoveredIndex !== null && hoveredIndex !== i ? 0.4 : 1
+          }"
           :transition="{ opacity: { duration: 0.15 } }"
           @pointerenter="hoveredIndex = i"
         >
@@ -190,7 +178,9 @@ const ENTER_TRANSITION = {
                 "
                 :opacity="ring.opacity"
                 :style="{ transformOrigin: 'center center' }"
-                :animate="{ scaleY: hoveredIndex === i ? ringHoverScale(l) : 1 }"
+                :animate="{
+                  scaleY: hoveredIndex === i ? ringHoverScale(l) : 1
+                }"
                 :transition="ringHoverTransition(l)"
               />
             </svg>
@@ -203,7 +193,7 @@ const ENTER_TRANSITION = {
             :transition="{
               delay: i * staggerDelay + 0.25,
               duration: 0.35,
-              ease: 'easeOut',
+              ease: 'easeOut'
             }"
           >
             <div v-if="showValues" class="funnel-value-slot">

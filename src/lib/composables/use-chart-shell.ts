@@ -1,27 +1,20 @@
-import { useElementSize } from "@vueuse/core";
-import { scaleLinear } from "d3-scale";
-import { computed, reactive, readonly, ref } from "vue";
-import type { ComputedRef, PropType } from "vue";
-import { DEFAULT_Y_AXIS_ID } from "../context";
-import type {
-  ChartContextValue,
-  ChartDatum,
-  Margin,
-  LineConfig,
-  XValue,
-  YScale,
-} from "../context";
-import { useProvideChart } from "./use-chart";
+import { useElementSize } from '@vueuse/core'
+import { scaleLinear } from 'd3-scale'
+import { computed, reactive, readonly, ref } from 'vue'
+import type { ComputedRef, PropType } from 'vue'
+import { DEFAULT_Y_AXIS_ID } from '../context'
+import type { ChartContextValue, ChartDatum, Margin, LineConfig, XValue, YScale } from '../context'
+import { useProvideChart } from './use-chart'
 
 export interface ChartShellProps {
-  data: ChartDatum[];
-  margin: Margin;
-  aspectRatio: string;
-  xDataKey: string;
-  animationDuration: number;
-  status: "loading" | "ready";
-  loadingLabel: string;
-  emptyLabel: string;
+  data: ChartDatum[]
+  margin: Margin
+  aspectRatio: string
+  xDataKey: string
+  animationDuration: number
+  status: 'loading' | 'ready'
+  loadingLabel: string
+  emptyLabel: string
 }
 
 /** Shared shell props. */
@@ -30,27 +23,27 @@ export function chartShellProps(xKeyDefault: string) {
     data: { type: Array as PropType<ChartDatum[]>, required: true as const },
     margin: {
       type: Object as PropType<Margin>,
-      default: (): Margin => ({ top: 40, right: 40, bottom: 40, left: 40 }),
+      default: (): Margin => ({ top: 40, right: 40, bottom: 40, left: 40 })
     },
-    aspectRatio: { type: String, default: "2 / 1" },
+    aspectRatio: { type: String, default: '2 / 1' },
     xDataKey: { type: String, default: xKeyDefault },
     animationDuration: { type: Number, default: 1100 },
     status: {
-      type: String as PropType<"loading" | "ready">,
-      default: "ready" as const,
+      type: String as PropType<'loading' | 'ready'>,
+      default: 'ready' as const
     },
-    loadingLabel: { type: String, default: "" },
-    emptyLabel: { type: String, default: "No data" },
-  };
+    loadingLabel: { type: String, default: '' },
+    emptyLabel: { type: String, default: 'No data' }
+  }
 }
 
 /** Domain (min,max) for one axis's keys — differs per chart type. */
-export type AxisDomain = (keys: string[]) => [number, number];
+export type AxisDomain = (keys: string[]) => [number, number]
 
 type ProvidedScales = Pick<
   ChartContextValue,
-  "renderData" | "xScale" | "yScale" | "yScales" | "getYScale"
-> & { revealClipId?: string; bar?: ChartContextValue["bar"] };
+  'renderData' | 'xScale' | 'yScale' | 'yScales' | 'getYScale'
+> & { revealClipId?: string; bar?: ChartContextValue['bar'] }
 
 /**
  * Shared chart-shell logic: container sizing, hover state, series registry,
@@ -58,115 +51,115 @@ type ProvidedScales = Pick<
  * x-scale, pointer snapping, and y-domain rule.
  */
 export function useChartShell(props: ChartShellProps) {
-  const containerRef = ref<HTMLDivElement | null>(null);
-  const { width, height } = useElementSize(containerRef);
+  const containerRef = ref<HTMLDivElement | null>(null)
+  const { width, height } = useElementSize(containerRef)
 
   const innerWidth = computed(() =>
     Math.max(0, width.value - props.margin.left - props.margin.right)
-  );
+  )
   const innerHeight = computed(() =>
     Math.max(0, height.value - props.margin.top - props.margin.bottom)
-  );
+  )
 
-  const hover = reactive({ active: false, index: -1, x: 0 });
+  const hover = reactive({ active: false, index: -1, x: 0 })
 
-  let hoverRaf: number | null = null;
-  let pendingHover: { index: number; x: number } | null = null;
+  let hoverRaf: number | null = null
+  let pendingHover: { index: number; x: number } | null = null
   function commitHover(index: number, x: number): void {
-    pendingHover = { index, x };
+    pendingHover = { index, x }
     if (hoverRaf !== null) {
-      return;
+      return
     }
     hoverRaf = requestAnimationFrame(() => {
-      hoverRaf = null;
+      hoverRaf = null
       if (!pendingHover) {
-        return;
+        return
       }
-      hover.active = true;
-      hover.index = pendingHover.index;
-      hover.x = pendingHover.x;
-    });
+      hover.active = true
+      hover.index = pendingHover.index
+      hover.x = pendingHover.x
+    })
   }
   function clearHover(): void {
     if (hoverRaf !== null) {
-      cancelAnimationFrame(hoverRaf);
-      hoverRaf = null;
+      cancelAnimationFrame(hoverRaf)
+      hoverRaf = null
     }
-    pendingHover = null;
-    hover.active = false;
+    pendingHover = null
+    hover.active = false
   }
 
-  const series = reactive<LineConfig[]>([]);
+  const series = reactive<LineConfig[]>([])
   function registerSeries(entry: LineConfig): void {
     if (!series.some((s) => s.dataKey === entry.dataKey)) {
-      series.push(entry);
+      series.push(entry)
     }
   }
 
   const legend = reactive<{ hoveredIndex: number | null }>({
-    hoveredIndex: null,
-  });
+    hoveredIndex: null
+  })
   function setLegendHover(index: number | null): void {
-    legend.hoveredIndex = index;
+    legend.hoveredIndex = index
   }
 
-  const hidden = reactive(new Set<string>());
+  const hidden = reactive(new Set<string>())
   function isSeriesHidden(dataKey: string): boolean {
-    return hidden.has(dataKey);
+    return hidden.has(dataKey)
   }
   function toggleSeries(dataKey: string): void {
     if (hidden.has(dataKey)) {
-      hidden.delete(dataKey);
+      hidden.delete(dataKey)
     } else {
-      hidden.add(dataKey);
+      hidden.add(dataKey)
     }
   }
 
-  const xAccessor = (datum: ChartDatum): XValue => datum[props.xDataKey] as XValue;
+  const xAccessor = (datum: ChartDatum): XValue => datum[props.xDataKey] as XValue
 
-  const resolvedYKeys = computed(() => series.map((s) => s.dataKey));
+  const resolvedYKeys = computed(() => series.map((s) => s.dataKey))
 
   const keysByAxis = computed<Record<string, string[]>>(() => {
     if (series.length === 0) {
-      return { [DEFAULT_Y_AXIS_ID]: [] };
+      return { [DEFAULT_Y_AXIS_ID]: [] }
     }
-    const groups: Record<string, string[]> = {};
+    const groups: Record<string, string[]> = {}
     for (const s of series) {
-      const axis = s.yAxisId ?? DEFAULT_Y_AXIS_ID;
-      (groups[axis] ??= []).push(s.dataKey);
+      const axis = s.yAxisId ?? DEFAULT_Y_AXIS_ID
+      ;(groups[axis] ??= []).push(s.dataKey)
     }
     for (const axis of Object.keys(groups)) {
-      const visible = groups[axis].filter((k) => !hidden.has(k));
-      groups[axis] = visible.length > 0 ? visible : groups[axis];
+      const visible = groups[axis].filter((k) => !hidden.has(k))
+      groups[axis] = visible.length > 0 ? visible : groups[axis]
     }
-    return groups;
-  });
+    return groups
+  })
 
   /** Build one linear y-scale per axis from that axis's keys. */
   function makeYScales(domainFor: AxisDomain): ComputedRef<Record<string, YScale>> {
     return computed(() => {
-      const scales: Record<string, YScale> = {};
+      const scales: Record<string, YScale> = {}
       for (const [axis, keys] of Object.entries(keysByAxis.value)) {
         scales[axis] = scaleLinear()
           .domain(domainFor(keys))
           .range([innerHeight.value, 0])
-          .nice() as unknown as YScale;
+          .nice() as unknown as YScale
       }
-      return scales;
-    });
+      return scales
+    })
   }
 
   /** Plot-relative pointer x, or null when outside the plot area. */
   function plotX(event: PointerEvent): number | null {
     if (!containerRef.value) {
-      return null;
+      return null
     }
-    const rect = containerRef.value.getBoundingClientRect();
-    const px = event.clientX - rect.left - props.margin.left;
+    const rect = containerRef.value.getBoundingClientRect()
+    const px = event.clientX - rect.left - props.margin.left
     if (px < 0 || px > innerWidth.value || props.data.length === 0) {
-      return null;
+      return null
     }
-    return px;
+    return px
   }
 
   function provideContext(scales: ProvidedScales): void {
@@ -188,8 +181,8 @@ export function useChartShell(props: ChartShellProps) {
       status: computed(() => props.status),
       series: readonly(series) as readonly LineConfig[],
       registerSeries,
-      ...scales,
-    });
+      ...scales
+    })
   }
 
   return {
@@ -207,6 +200,6 @@ export function useChartShell(props: ChartShellProps) {
     resolvedYKeys,
     keysByAxis,
     makeYScales,
-    provideContext,
-  };
+    provideContext
+  }
 }

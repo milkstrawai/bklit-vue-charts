@@ -1,88 +1,86 @@
 <script setup lang="ts">
-import { useElementSize } from "@vueuse/core";
-import { computed, ref, shallowRef } from "vue";
-import { getHeatmapContributionLevel } from "../utils/heatmap-utils";
-import type { HeatmapBin, HeatmapColumn } from "../utils/heatmap-utils";
+import { useElementSize } from '@vueuse/core'
+import { computed, ref, shallowRef } from 'vue'
+import { getHeatmapContributionLevel } from '../utils/heatmap-utils'
+import type { HeatmapBin, HeatmapColumn } from '../utils/heatmap-utils'
 
 interface HeatmapChartProps {
-  data: HeatmapColumn[];
-  gap?: number;
+  data: HeatmapColumn[]
+  gap?: number
 }
 
 const props = withDefaults(defineProps<HeatmapChartProps>(), {
-  gap: 2,
-});
+  gap: 2
+})
 
 const LEVEL_COLORS = [
-  "var(--chart-scale-01)",
-  "var(--chart-scale-02)",
-  "var(--chart-scale-03)",
-  "var(--chart-scale-04)",
-  "var(--chart-scale-05)",
-];
+  'var(--chart-scale-01)',
+  'var(--chart-scale-02)',
+  'var(--chart-scale-03)',
+  'var(--chart-scale-04)',
+  'var(--chart-scale-05)'
+]
 
-const MARGIN = { top: 28, right: 16, bottom: 0, left: 40 };
-const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const monthFmt = new Intl.DateTimeFormat("en-US", { month: "short" });
+const MARGIN = { top: 28, right: 16, bottom: 0, left: 40 }
+const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const monthFmt = new Intl.DateTimeFormat('en-US', { month: 'short' })
 
-const containerRef = ref<HTMLDivElement | null>(null);
-const { width } = useElementSize(containerRef);
+const containerRef = ref<HTMLDivElement | null>(null)
+const { width } = useElementSize(containerRef)
 
-const columnCount = computed(() => props.data.length);
+const columnCount = computed(() => props.data.length)
 const cellSize = computed(() => {
-  const innerWidth = width.value - MARGIN.left - MARGIN.right;
-  return Math.max(innerWidth / columnCount.value, 0);
-});
-const binSize = computed(() => Math.max(cellSize.value - props.gap, 0));
-const gridHeight = computed(
-  () => cellSize.value * 7 + MARGIN.top + MARGIN.bottom
-);
+  const innerWidth = width.value - MARGIN.left - MARGIN.right
+  return Math.max(innerWidth / columnCount.value, 0)
+})
+const binSize = computed(() => Math.max(cellSize.value - props.gap, 0))
+const gridHeight = computed(() => cellSize.value * 7 + MARGIN.top + MARGIN.bottom)
 
 function cellX(column: number): number {
-  return MARGIN.left + column * cellSize.value;
+  return MARGIN.left + column * cellSize.value
 }
 
 function cellY(row: number): number {
-  return MARGIN.top + row * cellSize.value;
+  return MARGIN.top + row * cellSize.value
 }
 
 const monthTicks = computed(() => {
-  const ticks: { key: string; x: number; label: string }[] = [];
-  let lastMonthKey = "";
+  const ticks: { key: string; x: number; label: string }[] = []
+  let lastMonthKey = ''
   props.data.forEach((column, columnIndex) => {
-    const anchor = column.bins.find((bin) => bin.date.getDate() === 1);
+    const anchor = column.bins.find((bin) => bin.date.getDate() === 1)
     if (!anchor) {
-      return;
+      return
     }
-    const monthKey = `${anchor.date.getFullYear()}-${anchor.date.getMonth()}`;
+    const monthKey = `${anchor.date.getFullYear()}-${anchor.date.getMonth()}`
     if (monthKey === lastMonthKey) {
-      return;
+      return
     }
     ticks.push({
       key: monthKey,
       x: cellX(columnIndex),
-      label: monthFmt.format(anchor.date),
-    });
-    lastMonthKey = monthKey;
-  });
-  return ticks;
-});
+      label: monthFmt.format(anchor.date)
+    })
+    lastMonthKey = monthKey
+  })
+  return ticks
+})
 
 const dayTicks = computed(() =>
   DAY_LABELS.map((label, row) => ({
     label,
-    y: cellY(row) + binSize.value / 2,
+    y: cellY(row) + binSize.value / 2
   })).filter((_, row) => row % 2 === 1)
-);
+)
 
 interface HoveredCell {
-  bin: HeatmapBin;
-  column: number;
-  row: number;
-  x: number;
-  y: number;
+  bin: HeatmapBin
+  column: number
+  row: number
+  x: number
+  y: number
 }
-const hovered = shallowRef<HoveredCell | null>(null);
+const hovered = shallowRef<HoveredCell | null>(null)
 
 function onCellEnter(column: number, row: number, bin: HeatmapBin): void {
   hovered.value = {
@@ -90,28 +88,28 @@ function onCellEnter(column: number, row: number, bin: HeatmapBin): void {
     column,
     row,
     x: cellX(column) + binSize.value / 2,
-    y: cellY(row) + binSize.value / 2,
-  };
+    y: cellY(row) + binSize.value / 2
+  }
 }
 
-const longMonthFmt = new Intl.DateTimeFormat("en-US", { month: "long" });
-const weekdayLongFmt = new Intl.DateTimeFormat("en-US", { weekday: "long" });
+const longMonthFmt = new Intl.DateTimeFormat('en-US', { month: 'long' })
+const weekdayLongFmt = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
 function ordinal(day: number): string {
-  const rem10 = day % 10;
-  const rem100 = day % 100;
+  const rem10 = day % 10
+  const rem100 = day % 100
   if (rem10 === 1 && rem100 !== 11) {
-    return `${day}st`;
+    return `${day}st`
   }
   if (rem10 === 2 && rem100 !== 12) {
-    return `${day}nd`;
+    return `${day}nd`
   }
   if (rem10 === 3 && rem100 !== 13) {
-    return `${day}rd`;
+    return `${day}rd`
   }
-  return `${day}th`;
+  return `${day}th`
 }
 function tooltipDate(date: Date): string {
-  return `${longMonthFmt.format(date)} ${ordinal(date.getDate())} ${date.getFullYear()}`;
+  return `${longMonthFmt.format(date)} ${ordinal(date.getDate())} ${date.getFullYear()}`
 }
 </script>
 
@@ -173,7 +171,7 @@ function tooltipDate(date: Date): string {
         <span class="heatmap-tooltip-divider" />
         <span class="heatmap-tooltip-count">
           {{ hovered.bin.count }}
-          contribution{{ hovered.bin.count === 1 ? "" : "s" }}
+          contribution{{ hovered.bin.count === 1 ? '' : 's' }}
         </span>
       </div>
     </div>

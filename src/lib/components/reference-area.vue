@@ -1,27 +1,27 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useChart } from "../composables/use-chart";
-import type { XValue } from "../context";
+import { computed } from 'vue'
+import { useChart } from '../composables/use-chart'
+import type { XValue } from '../context'
 import {
   computeReferenceAreaRect,
-  type ReferenceAreaIfOverflow,
-} from "../utils/reference-area-geometry";
+  type ReferenceAreaIfOverflow
+} from '../utils/reference-area-geometry'
 
 interface ReferenceAreaProps {
   /** Lower y bound (extends to plot top when omitted). */
-  y1?: number;
+  y1?: number
   /** Upper y bound (extends to plot bottom when omitted). */
-  y2?: number;
+  y2?: number
   /** Left x bound (extends to plot left when omitted). */
-  x1?: XValue;
+  x1?: XValue
   /** Right x bound (extends to plot right when omitted). */
-  x2?: XValue;
+  x2?: XValue
   /** Y-scale group for `y1`/`y2`. Default: "left". */
-  yAxisId?: string;
+  yAxisId?: string
   /** How to handle a band that spills past the plot. Default: "hidden" (clamp). */
-  ifOverflow?: ReferenceAreaIfOverflow;
-  fill?: string;
-  fillOpacity?: number;
+  ifOverflow?: ReferenceAreaIfOverflow
+  fill?: string
+  fillOpacity?: number
 }
 
 const props = withDefaults(defineProps<ReferenceAreaProps>(), {
@@ -30,12 +30,12 @@ const props = withDefaults(defineProps<ReferenceAreaProps>(), {
   x1: undefined,
   x2: undefined,
   yAxisId: undefined,
-  ifOverflow: "hidden",
-  fill: "color-mix(in oklch, var(--chart-foreground-muted) 12%, transparent)",
-  fillOpacity: 1,
-});
+  ifOverflow: 'hidden',
+  fill: 'color-mix(in oklch, var(--chart-foreground-muted) 12%, transparent)',
+  fillOpacity: 1
+})
 
-const { xScale, getYScale, innerWidth, innerHeight } = useChart();
+const { xScale, getYScale, innerWidth, innerHeight } = useChart()
 
 const hasBounds = computed(
   () =>
@@ -43,7 +43,7 @@ const hasBounds = computed(
     props.y2 !== undefined ||
     props.x1 !== undefined ||
     props.x2 !== undefined
-);
+)
 
 const rect = computed(() =>
   hasBounds.value
@@ -56,10 +56,10 @@ const rect = computed(() =>
         y2: props.y2,
         ifOverflow: props.ifOverflow,
         xScale: xScale.value,
-        yScale: getYScale(props.yAxisId),
+        yScale: getYScale(props.yAxisId)
       })
     : null
-);
+)
 </script>
 
 <template>
@@ -75,5 +75,4 @@ const rect = computed(() =>
   </g>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

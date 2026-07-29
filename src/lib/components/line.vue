@@ -1,38 +1,38 @@
 <script setup lang="ts">
-import { curveNatural, line } from "d3-shape";
-import type { CurveFactory } from "d3-shape";
-import { AnimatePresence, motion } from "motion-v";
-import { computed, useId } from "vue";
-import { useChart } from "../composables/use-chart";
-import type { ChartDatum, SeriesPointMarkerStyle } from "../context";
-import { HIGHLIGHT_SPRING, useHighlightSegment } from "../composables/use-highlight-segment";
+import { curveNatural, line } from 'd3-shape'
+import type { CurveFactory } from 'd3-shape'
+import { AnimatePresence, motion } from 'motion-v'
+import { computed, useId } from 'vue'
+import { useChart } from '../composables/use-chart'
+import type { ChartDatum, SeriesPointMarkerStyle } from '../context'
+import { HIGHLIGHT_SPRING, useHighlightSegment } from '../composables/use-highlight-segment'
 
 interface LineProps {
-  dataKey: string;
+  dataKey: string
   /** Y-scale group for biaxial charts (pair with a matching YAxis). */
-  yAxisId?: string;
-  stroke?: string;
-  strokeWidth?: number;
+  yAxisId?: string
+  stroke?: string
+  strokeWidth?: number
   /** D3 curve factory. Default: curveNatural */
-  curve?: CurveFactory;
+  curve?: CurveFactory
   /** Skip the entrance reveal when false. Default: true */
-  animate?: boolean;
-  fadeEdges?: boolean;
+  animate?: boolean
+  fadeEdges?: boolean
   /** Brighter re-stroke of the hovered segment */
-  showHighlight?: boolean;
+  showHighlight?: boolean
   /** Render ring markers at each data point. Default: false */
-  showMarkers?: boolean;
+  showMarkers?: boolean
   /** Point-marker styling (radius, fill, stroke, strokeWidth). */
-  markers?: SeriesPointMarkerStyle;
+  markers?: SeriesPointMarkerStyle
   /** Inclusive data index where a dashed tail begins. */
-  dashFromIndex?: number;
+  dashFromIndex?: number
   /** Dash pattern for the tail segment. Default: "6,4" */
-  dashArray?: string;
+  dashArray?: string
   /** Print each point's value above it. Default: false */
 }
 
 const props = withDefaults(defineProps<LineProps>(), {
-  stroke: "var(--chart-line-primary)",
+  stroke: 'var(--chart-line-primary)',
   strokeWidth: 2.5,
   curve: curveNatural,
   animate: true,
@@ -41,8 +41,8 @@ const props = withDefaults(defineProps<LineProps>(), {
   showMarkers: false,
   markers: undefined,
   dashFromIndex: undefined,
-  dashArray: "6,4",
-});
+  dashArray: '6,4'
+})
 
 const {
   data,
@@ -58,118 +58,116 @@ const {
   status,
   registerSeries,
   isSeriesHidden,
-  revealClipId,
-} = useChart();
+  revealClipId
+} = useChart()
 
-const hidden = computed(() => isSeriesHidden(props.dataKey));
-const yScale = computed(() => getYScale(props.yAxisId));
+const hidden = computed(() => isSeriesHidden(props.dataKey))
+const yScale = computed(() => getYScale(props.yAxisId))
 
 registerSeries({
   dataKey: props.dataKey,
   color: props.stroke,
-  yAxisId: props.yAxisId,
-});
+  yAxisId: props.yAxisId
+})
 
 const seriesIndex = computed(() =>
-  Math.max(0, series.findIndex((s) => s.dataKey === props.dataKey))
-);
+  Math.max(
+    0,
+    series.findIndex((s) => s.dataKey === props.dataKey)
+  )
+)
 const dimmed = computed(
   () =>
     (props.showHighlight && hover.active) ||
     (legend.hoveredIndex !== null && legend.hoveredIndex !== seriesIndex.value)
-);
+)
 
 function pathFor(rows: ChartDatum[]): string {
   return (
     line<ChartDatum>()
       .x((d) => xScale.value(xAccessor(d)))
       .y((d) => yScale.value(d[props.dataKey] as number))
-      .curve(props.curve)(rows) ?? ""
-  );
+      .curve(props.curve)(rows) ?? ''
+  )
 }
 
 const solidPathD = computed(() => {
   if (props.dashFromIndex === undefined) {
-    return pathFor(renderData.value);
+    return pathFor(renderData.value)
   }
-  return pathFor(renderData.value.slice(0, props.dashFromIndex + 1));
-});
+  return pathFor(renderData.value.slice(0, props.dashFromIndex + 1))
+})
 const dashPathD = computed(() =>
-  props.dashFromIndex === undefined
-    ? ""
-    : pathFor(renderData.value.slice(props.dashFromIndex))
-);
-const pathD = computed(() => pathFor(renderData.value));
+  props.dashFromIndex === undefined ? '' : pathFor(renderData.value.slice(props.dashFromIndex))
+)
+const pathD = computed(() => pathFor(renderData.value))
 
 const markerPoints = computed(() =>
   props.showMarkers
     ? renderData.value.map((d, i) => ({
         key: i,
         cx: xScale.value(xAccessor(d)),
-        cy: yScale.value(d[props.dataKey] as number),
+        cy: yScale.value(d[props.dataKey] as number)
       }))
     : []
-);
+)
 const markerStyle = computed(() => ({
   radius: props.markers?.radius ?? 5,
-  fill: props.markers?.fill ?? "var(--chart-background)",
+  fill: props.markers?.fill ?? 'var(--chart-background)',
   stroke: props.markers?.stroke ?? props.stroke,
-  strokeWidth: props.markers?.strokeWidth ?? 2,
-}));
+  strokeWidth: props.markers?.strokeWidth ?? 2
+}))
 
+const gradientId = `line-fade-${props.dataKey}-${useId()}`
+const visibleStroke = computed(() => (props.fadeEdges ? `url(#${gradientId})` : props.stroke))
 
-const gradientId = `line-fade-${props.dataKey}-${useId()}`;
-const visibleStroke = computed(() =>
-  props.fadeEdges ? `url(#${gradientId})` : props.stroke
-);
-
-const highlightClipId = `highlight-clip-${props.dataKey}-${useId()}`;
+const highlightClipId = `highlight-clip-${props.dataKey}-${useId()}`
 const { segmentBounds, hoverEpoch } = useHighlightSegment({
   data,
   xScale,
   xAccessor,
-  hover,
-});
+  hover
+})
 
-const isLoading = computed(() => status.value === "loading");
-const isFirstSeries = computed(() => seriesIndex.value === 0);
-const pulseClipId = `line-pulse-${props.dataKey}-${useId()}`;
-const pulseFadeId = `line-pulse-fade-${props.dataKey}-${useId()}`;
+const isLoading = computed(() => status.value === 'loading')
+const isFirstSeries = computed(() => seriesIndex.value === 0)
+const pulseClipId = `line-pulse-${props.dataKey}-${useId()}`
+const pulseFadeId = `line-pulse-fade-${props.dataKey}-${useId()}`
 
-const PULSE_CLIP_PADDING = 10;
-const PULSE_CYCLE_S = 2.2;
-const PULSE_PAUSE_S = 0.28;
-const PULSE_EASE = [0.85, 0, 0.15, 1] as const;
+const PULSE_CLIP_PADDING = 10
+const PULSE_CYCLE_S = 2.2
+const PULSE_PAUSE_S = 0.28
+const PULSE_EASE = [0.85, 0, 0.15, 1] as const
 
-const paddedFullWidth = computed(() => innerWidth.value + PULSE_CLIP_PADDING * 2);
-const pulseRightEdge = computed(() => innerWidth.value + PULSE_CLIP_PADDING);
+const paddedFullWidth = computed(() => innerWidth.value + PULSE_CLIP_PADDING * 2)
+const pulseRightEdge = computed(() => innerWidth.value + PULSE_CLIP_PADDING)
 
-const SKELETON_POINTS = 7;
+const SKELETON_POINTS = 7
 const skeletonD = computed(() => {
-  const w = innerWidth.value;
-  const h = innerHeight.value;
+  const w = innerWidth.value
+  const h = innerHeight.value
   if (w <= 0) {
-    return "";
+    return ''
   }
   const raw = Array.from(
     { length: SKELETON_POINTS },
     (_, i) => 110 + Math.sin(i * 1.15) * 36 + i * 9
-  );
-  const lo = Math.min(...raw);
-  const hi = Math.max(...raw);
-  const span = hi - lo || 1;
+  )
+  const lo = Math.min(...raw)
+  const hi = Math.max(...raw)
+  const span = hi - lo || 1
   const points = raw.map((v, i) => {
-    const x = (i / (SKELETON_POINTS - 1)) * w;
-    const y = h * 0.85 - ((v - lo) / span) * h * 0.7;
-    return [x, y] as [number, number];
-  });
+    const x = (i / (SKELETON_POINTS - 1)) * w
+    const y = h * 0.85 - ((v - lo) / span) * h * 0.7
+    return [x, y] as [number, number]
+  })
   return (
     line<[number, number]>()
       .x((p) => p[0])
       .y((p) => p[1])
-      .curve(curveNatural)(points) ?? ""
-  );
-});
+      .curve(curveNatural)(points) ?? ''
+  )
+})
 </script>
 
 <template>
@@ -183,14 +181,14 @@ const skeletonD = computed(() => {
             :initial="{ x: -PULSE_CLIP_PADDING, width: 0 }"
             :animate="{
               x: [-PULSE_CLIP_PADDING, -PULSE_CLIP_PADDING, pulseRightEdge],
-              width: [0, paddedFullWidth, 0],
+              width: [0, paddedFullWidth, 0]
             }"
             :transition="{
               duration: PULSE_CYCLE_S,
               ease: PULSE_EASE,
               times: [0, 0.5, 1],
               repeat: Number.POSITIVE_INFINITY,
-              repeatDelay: PULSE_PAUSE_S,
+              repeatDelay: PULSE_PAUSE_S
             }"
           />
         </clipPath>
@@ -219,10 +217,7 @@ const skeletonD = computed(() => {
     </template>
   </g>
 
-  <g
-    v-else-if="!hidden"
-    :clip-path="animate && revealClipId ? `url(#${revealClipId})` : undefined"
-  >
+  <g v-else-if="!hidden" :clip-path="animate && revealClipId ? `url(#${revealClipId})` : undefined">
     <defs v-if="fadeEdges">
       <linearGradient
         :id="gradientId"
@@ -303,5 +298,4 @@ const skeletonD = computed(() => {
   </g>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

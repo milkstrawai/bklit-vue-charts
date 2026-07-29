@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useChart } from "../composables/use-chart";
+import { computed } from 'vue'
+import { useChart } from '../composables/use-chart'
 
 interface LegendProps {
   /** "horizontal" wraps items in a row; "vertical" stacks them. Default: horizontal */
   /** Override labels (defaults to the series dataKey). */
 }
 
-const props = withDefaults(defineProps<LegendProps>(), {
-});
+const props = withDefaults(defineProps<LegendProps>(), {})
 
-const { series, legend, setLegendHover, isSeriesHidden, toggleSeries } =
-  useChart();
+const { series, legend, setLegendHover, isSeriesHidden, toggleSeries } = useChart()
 
 const items = computed(() =>
   series.map((entry, index) => ({
@@ -19,12 +17,12 @@ const items = computed(() =>
     dataKey: entry.dataKey,
     color: entry.color,
     label: entry.dataKey,
-    hidden: isSeriesHidden(entry.dataKey),
+    hidden: isSeriesHidden(entry.dataKey)
   }))
-);
+)
 
 function isFaded(index: number): boolean {
-  return legend.hoveredIndex !== null && legend.hoveredIndex !== index;
+  return legend.hoveredIndex !== null && legend.hoveredIndex !== index
 }
 </script>
 

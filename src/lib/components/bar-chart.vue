@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { max } from "d3-array";
-import { scaleBand } from "d3-scale";
-import { computed } from "vue";
-import type { ComputedRef } from "vue";
-import { DEFAULT_Y_AXIS_ID } from "../context";
-import type { ChartDatum, XScale, YScale } from "../context";
-import { chartShellProps, useChartShell } from "../composables/use-chart-shell";
+import { max } from 'd3-array'
+import { scaleBand } from 'd3-scale'
+import { computed } from 'vue'
+import type { ComputedRef } from 'vue'
+import { DEFAULT_Y_AXIS_ID } from '../context'
+import type { ChartDatum, XScale, YScale } from '../context'
+import { chartShellProps, useChartShell } from '../composables/use-chart-shell'
 
 const props = defineProps({
-  ...chartShellProps("month"),
+  ...chartShellProps('month'),
   /** Gap between bar groups as a fraction of band width. Default: 0.2 */
   barGap: { type: Number, default: 0.2 },
   /** Stack series instead of grouping them. Default: false */
   stacked: { type: Boolean, default: false },
   /** Gap between stacked segments in pixels. Default: 0 */
-  stackGap: { type: Number, default: 0 },
-});
+  stackGap: { type: Number, default: 0 }
+})
 
 const {
   containerRef,
@@ -28,11 +28,10 @@ const {
   plotX,
   series,
   makeYScales,
-  provideContext,
-} = useChartShell(props);
+  provideContext
+} = useChartShell(props)
 
-const categoryAccessor = (datum: ChartDatum): string =>
-  String(xAccessor(datum));
+const categoryAccessor = (datum: ChartDatum): string => String(xAccessor(datum))
 
 const xScale = computed(() =>
   scaleBand()
@@ -40,7 +39,7 @@ const xScale = computed(() =>
     .range([0, innerWidth.value])
     .paddingInner(props.barGap)
     .paddingOuter(props.barGap)
-);
+)
 
 const yScales = makeYScales((keys) => {
   const hi =
@@ -48,43 +47,43 @@ const yScales = makeYScales((keys) => {
       props.stacked
         ? keys.reduce((sum, k) => sum + (d[k] as number), 0)
         : max(keys, (k) => d[k] as number)
-    ) ?? 1;
-  return [0, hi * 1.1];
-});
+    ) ?? 1
+  return [0, hi * 1.1]
+})
 const getYScale = (yAxisId: string = DEFAULT_Y_AXIS_ID): YScale =>
-  yScales.value[yAxisId] ?? yScales.value[DEFAULT_Y_AXIS_ID];
-const yScale = computed(() => getYScale());
+  yScales.value[yAxisId] ?? yScales.value[DEFAULT_Y_AXIS_ID]
+const yScale = computed(() => getYScale())
 
 function stackBase(datum: ChartDatum, dataKey: string): number {
-  let sum = 0;
+  let sum = 0
   for (const s of series) {
     if (s.dataKey === dataKey) {
-      break;
+      break
     }
-    sum += (datum[s.dataKey] as number) ?? 0;
+    sum += (datum[s.dataKey] as number) ?? 0
   }
-  return sum;
+  return sum
 }
 
 const bandCenter = (datum: ChartDatum): number =>
-  (xScale.value(categoryAccessor(datum)) ?? 0) + xScale.value.bandwidth() / 2;
+  (xScale.value(categoryAccessor(datum)) ?? 0) + xScale.value.bandwidth() / 2
 
 function onPointerMove(event: PointerEvent): void {
-  const px = plotX(event);
+  const px = plotX(event)
   if (px === null) {
-    clearHover();
-    return;
+    clearHover()
+    return
   }
-  let best = 0;
-  let bestDist = Number.POSITIVE_INFINITY;
+  let best = 0
+  let bestDist = Number.POSITIVE_INFINITY
   props.data.forEach((datum, i) => {
-    const dist = Math.abs(px - bandCenter(datum));
+    const dist = Math.abs(px - bandCenter(datum))
     if (dist < bestDist) {
-      bestDist = dist;
-      best = i;
+      bestDist = dist
+      best = i
     }
-  });
-  commitHover(best, bandCenter(props.data[best]));
+  })
+  commitHover(best, bandCenter(props.data[best]))
 }
 
 provideContext({
@@ -96,9 +95,9 @@ provideContext({
   bar: {
     stacked: props.stacked,
     stackGap: props.stackGap,
-    stackBase,
-  },
-});
+    stackBase
+  }
+})
 </script>
 
 <template>

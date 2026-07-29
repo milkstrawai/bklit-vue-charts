@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import { motion } from "motion-v";
-import { computed, useId } from "vue";
-import { useChart } from "../composables/use-chart";
+import { motion } from 'motion-v'
+import { computed, useId } from 'vue'
+import { useChart } from '../composables/use-chart'
 
 interface GridProps {
   /** Show horizontal grid lines. Default: true */
-  horizontal?: boolean;
+  horizontal?: boolean
   /** Show vertical grid lines (time-series charts). Default: false */
-  vertical?: boolean;
+  vertical?: boolean
   /** Number of horizontal lines. Default: 5 */
-  numTicksRows?: number;
-  numTicksColumns?: number;
+  numTicksRows?: number
+  numTicksColumns?: number
   /** Explicit y values for horizontal lines (overrides numTicksRows). */
-  rowTickValues?: number[];
+  rowTickValues?: number[]
   /** Y-scale group for the horizontal lines. */
-  yAxisId?: string;
-  stroke?: string;
-  strokeOpacity?: number;
-  strokeWidth?: number;
-  strokeDasharray?: string;
-  fadeHorizontal?: boolean;
+  yAxisId?: string
+  stroke?: string
+  strokeOpacity?: number
+  strokeWidth?: number
+  strokeDasharray?: string
+  fadeHorizontal?: boolean
   /** Fade vertical lines at the top/bottom edges. Default: false */
-  fadeVertical?: boolean;
+  fadeVertical?: boolean
   /** Omit the first + last horizontal lines. Default: false */
-  hideHorizontalEdgeLines?: boolean;
+  hideHorizontalEdgeLines?: boolean
   /** Omit the first + last vertical lines. Default: false */
-  hideVerticalEdgeLines?: boolean;
+  hideVerticalEdgeLines?: boolean
   /** Draw emphasized lines at these y values (e.g. [0] for break-even). */
-  highlightRowValues?: number[];
-  highlightRowStroke?: string;
-  highlightRowStrokeOpacity?: number;
-  highlightRowStrokeWidth?: number;
-  highlightRowStrokeDasharray?: string;
+  highlightRowValues?: number[]
+  highlightRowStroke?: string
+  highlightRowStrokeOpacity?: number
+  highlightRowStrokeWidth?: number
+  highlightRowStrokeDasharray?: string
 }
 
 const props = withDefaults(defineProps<GridProps>(), {
@@ -41,59 +41,57 @@ const props = withDefaults(defineProps<GridProps>(), {
   numTicksColumns: 10,
   rowTickValues: undefined,
   yAxisId: undefined,
-  stroke: "var(--chart-grid)",
+  stroke: 'var(--chart-grid)',
   strokeOpacity: 1,
   strokeWidth: 1,
-  strokeDasharray: "4,4",
+  strokeDasharray: '4,4',
   fadeHorizontal: true,
   fadeVertical: false,
   hideHorizontalEdgeLines: false,
   hideVerticalEdgeLines: false,
   highlightRowValues: undefined,
-  highlightRowStroke: "var(--chart-foreground-muted)",
+  highlightRowStroke: 'var(--chart-foreground-muted)',
   highlightRowStrokeOpacity: 1,
   highlightRowStrokeWidth: 1,
-  highlightRowStrokeDasharray: "0",
-});
+  highlightRowStrokeDasharray: '0'
+})
 
-const { xScale, getYScale, innerWidth, innerHeight, status } = useChart();
+const { xScale, getYScale, innerWidth, innerHeight, status } = useChart()
 
-const yScale = computed(() => getYScale(props.yAxisId));
+const yScale = computed(() => getYScale(props.yAxisId))
 
-const isLoading = computed(() => status.value === "loading");
-const shimmerId = `grid-shimmer-${useId()}`;
-const shimmerWidth = 140;
+const isLoading = computed(() => status.value === 'loading')
+const shimmerId = `grid-shimmer-${useId()}`
+const shimmerWidth = 140
 
 function trimEdges<T>(items: T[], hide: boolean): T[] {
-  return hide && items.length > 2 ? items.slice(1, -1) : items;
+  return hide && items.length > 2 ? items.slice(1, -1) : items
 }
 
 const columnTicks = computed(() => {
   if (!props.vertical) {
-    return [];
+    return []
   }
   const scale = xScale.value as unknown as {
-    ticks?: (count: number) => Date[];
-  };
-  const raw = scale.ticks?.(props.numTicksColumns) ?? [];
+    ticks?: (count: number) => Date[]
+  }
+  const raw = scale.ticks?.(props.numTicksColumns) ?? []
   return trimEdges(raw, props.hideVerticalEdgeLines).map((tick) => ({
     key: tick.getTime(),
-    x: xScale.value(tick),
-  }));
-});
+    x: xScale.value(tick)
+  }))
+})
 
 const ticks = computed(() => {
-  const raw = props.rowTickValues ?? yScale.value.ticks(props.numTicksRows);
-  return trimEdges(raw, props.hideHorizontalEdgeLines);
-});
-const gradientId = `grid-fade-${useId()}`;
-const columnGradientId = `grid-fade-col-${useId()}`;
-const lineStroke = computed(() =>
-  props.fadeHorizontal ? `url(#${gradientId})` : props.stroke
-);
+  const raw = props.rowTickValues ?? yScale.value.ticks(props.numTicksRows)
+  return trimEdges(raw, props.hideHorizontalEdgeLines)
+})
+const gradientId = `grid-fade-${useId()}`
+const columnGradientId = `grid-fade-col-${useId()}`
+const lineStroke = computed(() => (props.fadeHorizontal ? `url(#${gradientId})` : props.stroke))
 const columnStroke = computed(() =>
   props.fadeVertical ? `url(#${columnGradientId})` : props.stroke
-);
+)
 </script>
 
 <template>
@@ -197,7 +195,11 @@ const columnStroke = computed(() =>
         :clip-path="`url(#${shimmerId}-rows)`"
         :initial="{ x: -shimmerWidth }"
         :animate="{ x: innerWidth }"
-        :transition="{ duration: 2.2, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }"
+        :transition="{
+          duration: 2.2,
+          repeat: Number.POSITIVE_INFINITY,
+          ease: 'easeInOut'
+        }"
       />
     </template>
   </g>

@@ -73,8 +73,13 @@
 }
 
 @keyframes chart-label-pulse {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 1; }
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .chart-empty {
@@ -114,7 +119,7 @@ body {
     ui-sans-serif,
     system-ui,
     -apple-system,
-    "Segoe UI",
+    'Segoe UI',
     sans-serif;
   transition: background-color 0.25s ease;
 }

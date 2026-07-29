@@ -16,9 +16,9 @@ npm install bklit-vue-charts@beta vue @vueuse/core motion-v
 `vue`, `@vueuse/core`, and `motion-v` are peer dependencies.
 
 ```ts
-import { LineChart, Line, Grid, XAxis, YAxis, ChartTooltip } from "bklit-vue-charts";
-import "bklit-vue-charts/style.css";  // component styles (required)
-import "bklit-vue-charts/theme.css";  // default tokens (optional)
+import { LineChart, Line, Grid, XAxis, YAxis, ChartTooltip } from 'bklit-vue-charts'
+import 'bklit-vue-charts/style.css' // component styles (required)
+import 'bklit-vue-charts/theme.css' // default tokens (optional)
 ```
 
 ## Usage
@@ -40,9 +40,9 @@ prop.
 
 ```ts
 const data = [
-  { date: new Date("2025-01-01"), users: 1200, pageviews: 4500 },
-  { date: new Date("2025-01-02"), users: 1350, pageviews: 4800 },
-];
+  { date: new Date('2025-01-01'), users: 1200, pageviews: 4500 },
+  { date: new Date('2025-01-02'), users: 1350, pageviews: 4800 }
+]
 ```
 
 `AreaChart` and `BarChart` work the same way with `<Area>` / `<Bar>` children;
@@ -60,16 +60,16 @@ const data = [
 Drop these inside a chart — they read the chart context. `Legend` and HTML
 chrome go in the `#overlay` slot; `ChartBrush` renders in the plot.
 
-| Component | What it does |
-|---|---|
-| `Grid` | horizontal/vertical grid lines, edge fade, break-even `highlight-row-values` |
-| `XAxis` / `BarXAxis` | x labels (date ticks or categories); fade under the tooltip pill |
-| `YAxis` | value labels; `orientation="left"\|"right"`, compact `12k` formatting |
-| `ChartTooltip` | crosshair + per-series dots + content panel + rolling date pill |
-| `Legend` | series markers + labels; hover dims the others, click toggles a series |
-| `Background` | pattern fill (`diagonal`/`horizontal`/`vertical`/`cross`/`dots`/`circles`/`accent`) |
-| `ChartBrush` | in-chart brush overlay; emits a `{ start, end }` date selection |
-| `ReferenceArea` | shaded band between `y1`/`y2` and/or `x1`/`x2` |
+| Component            | What it does                                                                        |
+| -------------------- | ----------------------------------------------------------------------------------- |
+| `Grid`               | horizontal/vertical grid lines, edge fade, break-even `highlight-row-values`        |
+| `XAxis` / `BarXAxis` | x labels (date ticks or categories); fade under the tooltip pill                    |
+| `YAxis`              | value labels; `orientation="left"\|"right"`, compact `12k` formatting               |
+| `ChartTooltip`       | crosshair + per-series dots + content panel + rolling date pill                     |
+| `Legend`             | series markers + labels; hover dims the others, click toggles a series              |
+| `Background`         | pattern fill (`diagonal`/`horizontal`/`vertical`/`cross`/`dots`/`circles`/`accent`) |
+| `ChartBrush`         | in-chart brush overlay; emits a `{ start, end }` date selection                     |
+| `ReferenceArea`      | shaded band between `y1`/`y2` and/or `x1`/`x2`                                      |
 
 ## Theming
 
@@ -87,8 +87,8 @@ the full default set, or define your own on `:root`:
   --chart-grid: oklch(0.9 0 0);
   --chart-tooltip-background: oklch(0.21 0.006 285 / 0.8);
   --chart-tooltip-foreground: oklch(0.985 0 0);
-  --chart-1: var(--chart-line-primary);          /* funnel */
-  --chart-scale-01: oklch(0.98 0.003 106);       /* heatmap ramp, 01–05 */
+  --chart-1: var(--chart-line-primary); /* funnel */
+  --chart-scale-01: oklch(0.98 0.003 106); /* heatmap ramp, 01–05 */
 }
 ```
 
@@ -112,13 +112,13 @@ main chart's `xDomain`:
 
 ```vue
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import type { ChartBrushSelection } from "bklit-vue-charts";
+import { computed, ref } from 'vue'
+import type { ChartBrushSelection } from 'bklit-vue-charts'
 
-const selection = ref<ChartBrushSelection | null>(null);
+const selection = ref<ChartBrushSelection | null>(null)
 const domain = computed(() =>
   selection.value ? [selection.value.start, selection.value.end] : undefined
-);
+)
 </script>
 
 <template>
@@ -138,18 +138,18 @@ const domain = computed(() =>
 
 ### Root charts — `LineChart` / `AreaChart` / `BarChart`
 
-| Prop | Type | Default |
-|---|---|---|
-| `data` | `Record<string, unknown>[]` | required |
-| `xDataKey` | `string` | `"date"` (`"month"` for Bar) |
-| `margin` | `{ top, right, bottom, left }` | `40` all sides |
-| `aspectRatio` | `string` | `"2 / 1"` |
-| `animationDuration` | `number` | `1100` |
-| `status` | `"loading" \| "ready"` | `"ready"` |
-| `loadingLabel` | `string` | `""` |
-| `emptyLabel` | `string` | `"No data"` |
-| `xDomain` | `[Date, Date]` | — (Line/Area only) |
-| `stacked` / `stackGap` | `boolean` / `number` | `false` / `0` (Bar only) |
+| Prop                   | Type                           | Default                      |
+| ---------------------- | ------------------------------ | ---------------------------- |
+| `data`                 | `Record<string, unknown>[]`    | required                     |
+| `xDataKey`             | `string`                       | `"date"` (`"month"` for Bar) |
+| `margin`               | `{ top, right, bottom, left }` | `40` all sides               |
+| `aspectRatio`          | `string`                       | `"2 / 1"`                    |
+| `animationDuration`    | `number`                       | `1100`                       |
+| `status`               | `"loading" \| "ready"`         | `"ready"`                    |
+| `loadingLabel`         | `string`                       | `""`                         |
+| `emptyLabel`           | `string`                       | `"No data"`                  |
+| `xDomain`              | `[Date, Date]`                 | — (Line/Area only)           |
+| `stacked` / `stackGap` | `boolean` / `number`           | `false` / `0` (Bar only)     |
 
 ### Series — `Line` / `Area` / `Bar`
 
@@ -164,8 +164,8 @@ Common: `data-key` (required), `y-axis-id`, `stroke`/`fill`, `animate`.
 Any component inside a chart can read the context:
 
 ```ts
-import { useChart } from "bklit-vue-charts";
-const { xScale, getYScale, innerWidth, innerHeight, hover, series } = useChart();
+import { useChart } from 'bklit-vue-charts'
+const { xScale, getYScale, innerWidth, innerHeight, hover, series } = useChart()
 ```
 
 ## Credits

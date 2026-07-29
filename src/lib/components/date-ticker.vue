@@ -1,68 +1,66 @@
 <script setup lang="ts">
-import { motion } from "motion-v";
-import { computed } from "vue";
+import { motion } from 'motion-v'
+import { computed } from 'vue'
 
 const props = defineProps<{
-  labels: string[];
-  currentIndex: number;
-}>();
+  labels: string[]
+  currentIndex: number
+}>()
 
-const ITEM_HEIGHT = 24;
-const TICKER_SPRING = { type: "spring", stiffness: 400, damping: 35 };
-const COMPACT_TICKER_THRESHOLD = 60;
+const ITEM_HEIGHT = 24
+const TICKER_SPRING = { type: 'spring', stiffness: 400, damping: 35 }
+const COMPACT_TICKER_THRESHOLD = 60
 
-const isCompact = computed(() => props.labels.length > COMPACT_TICKER_THRESHOLD);
-const compactLabel = computed(
-  () => props.labels[props.currentIndex] ?? props.labels[0] ?? ""
-);
+const isCompact = computed(() => props.labels.length > COMPACT_TICKER_THRESHOLD)
+const compactLabel = computed(() => props.labels[props.currentIndex] ?? props.labels[0] ?? '')
 
 const parsedLabels = computed(() =>
   props.labels.map((label, index) => {
-    const parts = String(label).split(" ");
+    const parts = String(label).split(' ')
     return {
-      month: parts[0] || "",
-      day: parts[1] || "",
-      key: `${label}::${index}`,
-    };
+      month: parts[0] || '',
+      day: parts[1] || '',
+      key: `${label}::${index}`
+    }
   })
-);
+)
 
 interface MonthSegment {
-  month: string;
-  key: string;
-  startIndex: number;
+  month: string
+  key: string
+  startIndex: number
 }
 
 // One entry per consecutive month run (Jan → Feb → …)
 const monthSegments = computed(() => {
-  const segments: MonthSegment[] = [];
+  const segments: MonthSegment[] = []
   parsedLabels.value.forEach((label, index) => {
-    const prev = segments.at(-1);
+    const prev = segments.at(-1)
     if (!prev || prev.month !== label.month) {
       segments.push({
         month: label.month,
         key: `${label.month}-${index}`,
-        startIndex: index,
-      });
+        startIndex: index
+      })
     }
-  });
-  return segments;
-});
+  })
+  return segments
+})
 
 const currentMonthIndex = computed(() => {
   if (props.currentIndex < 0 || props.currentIndex >= parsedLabels.value.length) {
-    return 0;
+    return 0
   }
   for (let i = monthSegments.value.length - 1; i >= 0; i--) {
     if (monthSegments.value[i].startIndex <= props.currentIndex) {
-      return i;
+      return i
     }
   }
-  return 0;
-});
+  return 0
+})
 
-const dayY = computed(() => -props.currentIndex * ITEM_HEIGHT);
-const monthY = computed(() => -currentMonthIndex.value * ITEM_HEIGHT);
+const dayY = computed(() => -props.currentIndex * ITEM_HEIGHT)
+const monthY = computed(() => -currentMonthIndex.value * ITEM_HEIGHT)
 </script>
 
 <template>

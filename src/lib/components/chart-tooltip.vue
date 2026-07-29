@@ -1,37 +1,37 @@
 <script setup lang="ts">
-import { AnimatePresence, motion } from "motion-v";
-import { computed, useId } from "vue";
-import { useChart } from "../composables/use-chart";
-import type { ChartDatum } from "../context";
-import DateTicker from "../components/date-ticker.vue";
-import { intFmt, weekdayDateFmt, xLabel } from "../utils/chart-formatters";
+import { AnimatePresence, motion } from 'motion-v'
+import { computed, useId } from 'vue'
+import { useChart } from '../composables/use-chart'
+import type { ChartDatum } from '../context'
+import DateTicker from '../components/date-ticker.vue'
+import { intFmt, weekdayDateFmt, xLabel } from '../utils/chart-formatters'
 
 export interface TooltipRow {
-  color: string;
-  label: string;
-  value: string | number;
+  color: string
+  label: string
+  value: string | number
 }
 
 interface ChartTooltipProps {
-  showDatePill?: boolean;
-  showCrosshair?: boolean;
-  showDots?: boolean;
+  showDatePill?: boolean
+  showCrosshair?: boolean
+  showDots?: boolean
   /** Crosshair + dot color override. Default: var(--chart-crosshair) */
-  indicatorColor?: string | ((point: Record<string, unknown>) => string);
+  indicatorColor?: string | ((point: Record<string, unknown>) => string)
   /** Dash pattern for the crosshair (renders a dashed line). */
-  indicatorDasharray?: string;
+  indicatorDasharray?: string
   /** Vertical crosshair fade. Default: "both" */
-  indicatorFadeEdges?: "both" | "top" | "bottom" | "none";
+  indicatorFadeEdges?: 'both' | 'top' | 'bottom' | 'none'
   /** Fade size as a percentage of height. Default: 10 */
-  indicatorFadeLength?: number;
+  indicatorFadeLength?: number
   /** Ring markers instead of filled dots. Default: "dot" */
-  dotVariant?: "dot" | "ring";
+  dotVariant?: 'dot' | 'ring'
   /** Dot radius multiplier. Default: 1 */
-  dotScale?: number;
+  dotScale?: number
   /** Panel follows the crosshair spring when true. Default: false */
-  matchCrosshair?: boolean;
+  matchCrosshair?: boolean
   /** Custom row generator; defaults to one row per registered series. */
-  rows?: (point: ChartDatum) => TooltipRow[];
+  rows?: (point: ChartDatum) => TooltipRow[]
 }
 
 const props = withDefaults(defineProps<ChartTooltipProps>(), {
@@ -40,13 +40,13 @@ const props = withDefaults(defineProps<ChartTooltipProps>(), {
   showDots: true,
   indicatorColor: undefined,
   indicatorDasharray: undefined,
-  indicatorFadeEdges: "both",
+  indicatorFadeEdges: 'both',
   indicatorFadeLength: 10,
-  dotVariant: "dot",
+  dotVariant: 'dot',
   dotScale: 1,
   matchCrosshair: false,
-  rows: undefined,
-});
+  rows: undefined
+})
 
 const {
   data,
@@ -58,105 +58,100 @@ const {
   containerRef,
   containerWidth,
   series,
-  isSeriesHidden,
-} = useChart();
+  isSeriesHidden
+} = useChart()
 
-const visibleSeries = computed(() =>
-  series.filter((s) => !isSeriesHidden(s.dataKey))
-);
+const visibleSeries = computed(() => series.filter((s) => !isSeriesHidden(s.dataKey)))
 
 const fadeStops = computed(() => {
-  const f = props.indicatorFadeLength;
-  const top = props.indicatorFadeEdges === "both" || props.indicatorFadeEdges === "top";
-  const bottom =
-    props.indicatorFadeEdges === "both" || props.indicatorFadeEdges === "bottom";
+  const f = props.indicatorFadeLength
+  const top = props.indicatorFadeEdges === 'both' || props.indicatorFadeEdges === 'top'
+  const bottom = props.indicatorFadeEdges === 'both' || props.indicatorFadeEdges === 'bottom'
   return [
-    { offset: "0%", opacity: top ? 0 : 1 },
+    { offset: '0%', opacity: top ? 0 : 1 },
     { offset: `${f}%`, opacity: 1 },
     { offset: `${100 - f}%`, opacity: 1 },
-    { offset: "100%", opacity: bottom ? 0 : 1 },
-  ];
-});
+    { offset: '100%', opacity: bottom ? 0 : 1 }
+  ]
+})
 
-const INDICATOR_SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
-const BOX_SPRING = { type: "spring", stiffness: 100, damping: 20 } as const;
+const INDICATOR_SPRING = {
+  type: 'spring',
+  stiffness: 300,
+  damping: 30
+} as const
+const BOX_SPRING = { type: 'spring', stiffness: 100, damping: 20 } as const
 
-const datum = computed(() => (hover.active ? data.value[hover.index] : null));
+const datum = computed(() => (hover.active ? data.value[hover.index] : null))
 
 // Upstream resolves indicatorColor against the hovered point; a function with no
 // active point falls back to the crosshair var.
 const resolvedIndicatorColor = computed(() => {
-  const c = props.indicatorColor;
+  const c = props.indicatorColor
   if (c == null) {
-    return "var(--chart-crosshair)";
+    return 'var(--chart-crosshair)'
   }
-  if (typeof c === "function") {
-    return datum.value ? c(datum.value) : "var(--chart-crosshair)";
+  if (typeof c === 'function') {
+    return datum.value ? c(datum.value) : 'var(--chart-crosshair)'
   }
-  return c;
-});
+  return c
+})
 
 const title = computed(() => {
   if (!datum.value) {
-    return "";
+    return ''
   }
-  const x = xAccessor(datum.value);
-  return x instanceof Date ? weekdayDateFmt.format(x) : String(x);
-});
+  const x = xAccessor(datum.value)
+  return x instanceof Date ? weekdayDateFmt.format(x) : String(x)
+})
 
 const rows = computed<TooltipRow[]>(() => {
-  const point = datum.value;
+  const point = datum.value
   if (!point) {
-    return [];
+    return []
   }
   if (props.rows) {
-    return props.rows(point);
+    return props.rows(point)
   }
   return visibleSeries.value.map((s) => ({
     color: s.color,
     label: s.dataKey,
-    value: intFmt(Math.round(point[s.dataKey] as number)),
-  }));
-});
+    value: intFmt(Math.round(point[s.dataKey] as number))
+  }))
+})
 
 const dots = computed(() => {
-  const point = datum.value;
+  const point = datum.value
   if (!point) {
-    return [];
+    return []
   }
   return visibleSeries.value.map((s) => ({
     key: s.dataKey,
     color: s.color,
     x: s.dotX ? s.dotX(point) : hover.x,
-    y: s.dotY ? s.dotY(point) : getYScale(s.yAxisId)(point[s.dataKey] as number),
-  }));
-});
+    y: s.dotY ? s.dotY(point) : getYScale(s.yAxisId)(point[s.dataKey] as number)
+  }))
+})
 
-const dotRadius = computed(() => 5 * props.dotScale);
+const dotRadius = computed(() => 5 * props.dotScale)
 
-const tickerLabels = computed(() => data.value.map((d) => xLabel(xAccessor(d))));
+const tickerLabels = computed(() => data.value.map((d) => xLabel(xAccessor(d))))
 
-const crosshairGradientId = `tooltip-indicator-${useId()}`;
+const crosshairGradientId = `tooltip-indicator-${useId()}`
 
-const PANEL_OFFSET = 16;
-const PANEL_WIDTH = 180;
+const PANEL_OFFSET = 16
+const PANEL_WIDTH = 180
 const isFlipped = computed(
-  () =>
-    hover.x + margin.value.left + PANEL_WIDTH + PANEL_OFFSET >
-    containerWidth.value
-);
+  () => hover.x + margin.value.left + PANEL_WIDTH + PANEL_OFFSET > containerWidth.value
+)
 const panelX = computed(() => {
-  const anchor = hover.x + margin.value.left;
-  return isFlipped.value
-    ? anchor - PANEL_OFFSET - PANEL_WIDTH
-    : anchor + PANEL_OFFSET;
-});
-const panelTop = computed(() => margin.value.top);
-const panelSpring = computed(() =>
-  props.matchCrosshair ? INDICATOR_SPRING : BOX_SPRING
-);
+  const anchor = hover.x + margin.value.left
+  return isFlipped.value ? anchor - PANEL_OFFSET - PANEL_WIDTH : anchor + PANEL_OFFSET
+})
+const panelTop = computed(() => margin.value.top)
+const panelSpring = computed(() => (props.matchCrosshair ? INDICATOR_SPRING : BOX_SPRING))
 
-const pillX = computed(() => hover.x + margin.value.left);
+const pillX = computed(() => hover.x + margin.value.left)
 </script>
 
 <template>
@@ -236,10 +231,7 @@ const pillX = computed(() => hover.x + margin.value.left);
               <div class="tooltip-rows">
                 <div v-for="row in rows" :key="row.label" class="tooltip-row">
                   <div class="tooltip-row-label">
-                    <span
-                      class="tooltip-swatch"
-                      :style="{ backgroundColor: row.color }"
-                    />
+                    <span class="tooltip-swatch" :style="{ backgroundColor: row.color }" />
                     <span class="tooltip-key">{{ row.label }}</span>
                   </div>
                   <span class="tooltip-value">{{ row.value }}</span>
