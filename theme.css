@@ -1,0 +1,136 @@
+/* Chart tokens */
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0.004 285);
+  --border: oklch(0.922 0 0);
+
+  --chart-background: oklch(1 0 0);
+  --chart-foreground: oklch(0.145 0.004 285);
+  --chart-foreground-muted: oklch(0.55 0.014 260);
+  --muted-foreground: oklch(0.55 0.014 260);
+  --chart-label: oklch(0.55 0.014 260);
+  /* Monochrome series palette as on ui.bklit.com */
+  --chart-line-primary: oklch(0.32 0.008 80);
+  --chart-line-secondary: oklch(0.6 0.012 75);
+  --chart-crosshair: oklch(0.45 0.01 275);
+  --chart-grid: oklch(0.9 0 0);
+
+  /* Light panel on the light theme, as in the docs preview */
+  --chart-tooltip-background: oklch(1 0 0 / 0.88);
+  --chart-tooltip-foreground: oklch(0.205 0.004 285);
+  --chart-tooltip-muted: oklch(0.55 0.014 260);
+
+  /* Date pill: bg-zinc-900 / text-white in light mode */
+  --date-pill-background: oklch(0.21 0.006 285);
+  --date-pill-foreground: oklch(1 0 0);
+
+  /* Funnel + heatmap tokens */
+  --chart-1: var(--chart-line-primary);
+  --chart-scale-01: oklch(0.98 0.003 106);
+  --chart-scale-02: oklch(0.92 0.008 106);
+  --chart-scale-03: oklch(0.82 0.015 106);
+  --chart-scale-04: oklch(0.68 0.02 106);
+  --chart-scale-05: oklch(0.55 0.025 106);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Chart shell (shared by LineChart / BarChart) */
+.bklit-chart-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.bklit-chart {
+  position: relative;
+  width: 100%;
+  background: var(--chart-background);
+  transition: background-color 0.25s ease;
+}
+
+.bklit-chart svg {
+  display: block;
+  overflow: visible;
+  cursor: crosshair;
+}
+
+/* Centered shimmer label during loading */
+.chart-loading-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--chart-foreground-muted);
+  pointer-events: none;
+  animation: chart-label-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes chart-label-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: var(--chart-foreground-muted);
+  pointer-events: none;
+}
+
+/* Charts are select-none in the lib: clicking marks must not select
+   labels, flash a tap highlight, or draw a focus ring. */
+.bklit-chart,
+.funnel,
+.heatmap-wrap {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bklit-chart :focus,
+.funnel :focus,
+.heatmap-wrap :focus,
+.bklit-chart svg,
+.heatmap-wrap svg {
+  outline: none;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  transition: background-color 0.25s ease;
+}
+
+/* Demo layout */
+.demo-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.demo-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 32px;
+  background: var(--chart-background);
+  transition: background-color 0.25s ease;
+}
