@@ -6,10 +6,10 @@ import { xLabel } from '../utils/chart-formatters'
 
 interface ChartXAxisProps {
   numTicks?: number
+  /** Half-width of the tooltip date pill, for fade calculation. Default: 50 */
   tickerHalfWidth?: number
   /** "data" snaps labels to rows (crosshair-aligned); "domain" spaces evenly. */
   tickMode?: 'data' | 'domain'
-  /** Max labels for band (category) axes. Default: 12 */
 }
 
 const props = withDefaults(defineProps<ChartXAxisProps>(), {
@@ -24,24 +24,6 @@ interface AxisTick {
   key: string | number
   x: number
   label: string
-}
-
-function categoryTicks(scale: XScale): AxisTick[] {
-  const rows = data.value
-  const stride = Math.max(1, Math.ceil(rows.length / props.numTicks))
-  const ticks: AxisTick[] = []
-  rows.forEach((d, i) => {
-    if (i % stride !== 0) {
-      return
-    }
-    const x = xAccessor(d)
-    ticks.push({
-      key: String(x),
-      x: scale(x) + (scale.bandwidth?.() ?? 0) / 2,
-      label: xLabel(x)
-    })
-  })
-  return ticks
 }
 
 function dataTicks(scale: XScale): AxisTick[] {
@@ -71,9 +53,6 @@ const ticks = computed(() => {
     return []
   }
   const scale = xScale.value
-  if (typeof scale.bandwidth === 'function') {
-    return categoryTicks(scale)
-  }
   return props.tickMode === 'domain' ? domainTicks(scale) : dataTicks(scale)
 })
 

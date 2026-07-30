@@ -60,16 +60,17 @@ const data = [
 Drop these inside a chart — they read the chart context. `Legend` and HTML
 chrome go in the `#overlay` slot; `ChartBrush` renders in the plot.
 
-| Component            | What it does                                                                        |
-| -------------------- | ----------------------------------------------------------------------------------- |
-| `Grid`               | horizontal/vertical grid lines, edge fade, break-even `highlight-row-values`        |
-| `XAxis` / `BarXAxis` | x labels (date ticks or categories); fade under the tooltip pill                    |
-| `YAxis`              | value labels; `orientation="left"\|"right"`, compact `12k` formatting               |
-| `ChartTooltip`       | crosshair + per-series dots + content panel + rolling date pill                     |
-| `Legend`             | series markers + labels; hover dims the others, click toggles a series              |
-| `Background`         | pattern fill (`diagonal`/`horizontal`/`vertical`/`cross`/`dots`/`circles`/`accent`) |
-| `ChartBrush`         | in-chart brush overlay; emits a `{ start, end }` date selection                     |
-| `ReferenceArea`      | shaded band between `y1`/`y2` and/or `x1`/`x2`                                      |
+| Component       | What it does                                                                        |
+| --------------- | ----------------------------------------------------------------------------------- |
+| `Grid`          | horizontal/vertical grid lines, edge fade, break-even `highlight-row-values`        |
+| `XAxis`         | date tick labels for time-series charts; fade under the tooltip pill                |
+| `BarXAxis`      | one category label per bar, thinned to `max-labels`; fade under the tooltip pill    |
+| `YAxis`         | value labels; `orientation="left"\|"right"`, compact `12k` formatting               |
+| `ChartTooltip`  | crosshair + per-series dots + content panel + rolling date pill                     |
+| `Legend`        | series markers + labels; hover dims the others, click toggles a series              |
+| `Background`    | pattern fill (`diagonal`/`horizontal`/`vertical`/`cross`/`dots`/`circles`/`accent`) |
+| `ChartBrush`    | in-chart brush overlay; emits a `{ start, end }` date selection                     |
+| `ReferenceArea` | shaded band between `y1`/`y2` and/or `x1`/`x2`                                      |
 
 ## Theming
 
@@ -150,6 +151,13 @@ const domain = computed(() =>
 | `emptyLabel`           | `string`                       | `"No data"`                  |
 | `xDomain`              | `[Date, Date]`                 | — (Line/Area only)           |
 | `stacked` / `stackGap` | `boolean` / `number`           | `false` / `0` (Bar only)     |
+
+`AreaChart` is an alias for `LineChart`.
+
+### Axes — `XAxis` / `BarXAxis`
+
+- **XAxis** (time series) — `num-ticks` (5), `tick-mode` (`"data" | "domain"`), `ticker-half-width` (50)
+- **BarXAxis** (bar band scale) — `max-labels` (12), `show-all-labels` (false), `ticker-half-width` (50)
 
 ### Series — `Line` / `Area` / `Bar`
 
