@@ -24,7 +24,14 @@ export { default as HeatmapChart } from './components/heatmap-chart.vue'
 export { useChart } from './composables/use-chart'
 
 // Types + utilities
-export type { ChartContextValue, Margin, LineConfig, SeriesPointMarkerStyle } from './context'
+export type {
+  ChartContextValue,
+  ChartDatum,
+  LineConfig,
+  Margin,
+  SeriesPointMarkerStyle,
+  XValue
+} from './context'
 export { DEFAULT_CHART_ENTER_TRANSITION, DEFAULT_Y_AXIS_ID } from './context'
 export type { TooltipRow } from './components/chart-tooltip.vue'
 export type { ChartBrushSelection } from './components/chart-brush.vue'
