@@ -7,10 +7,19 @@ import type { HeatmapBin, HeatmapColumn } from '../utils/heatmap-utils'
 interface HeatmapChartProps {
   data: HeatmapColumn[]
   gap?: number
+  /**
+   * Map a bin's `count` to a 0–4 intensity. Override when `count` carries a
+   * domain value (revenue, savings) rather than an event tally.
+   */
+  level?: (count: number) => number
+  /** Tooltip text for a bin's `count`. Default: "12 contributions". */
+  formatValue?: (count: number) => string
 }
 
 const props = withDefaults(defineProps<HeatmapChartProps>(), {
-  gap: 2
+  gap: 2,
+  level: getHeatmapContributionLevel,
+  formatValue: (count: number) => `${count} contribution${count === 1 ? '' : 's'}`
 })
 
 const LEVEL_COLORS = [
@@ -132,7 +141,7 @@ function tooltipDate(date: Date): string {
               :width="binSize"
               :height="binSize"
               :rx="2"
-              :fill="LEVEL_COLORS[getHeatmapContributionLevel(bin.count)]"
+              :fill="LEVEL_COLORS[props.level(bin.count)]"
               @pointerenter="onCellEnter(columnIndex, bin.bin, bin)"
             />
           </template>
@@ -170,8 +179,7 @@ function tooltipDate(date: Date): string {
         </span>
         <span class="heatmap-tooltip-divider" />
         <span class="heatmap-tooltip-count">
-          {{ hovered.bin.count }}
-          contribution{{ hovered.bin.count === 1 ? '' : 's' }}
+          {{ props.formatValue(hovered.bin.count) }}
         </span>
       </div>
     </div>
