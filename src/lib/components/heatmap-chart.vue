@@ -18,6 +18,8 @@ import PatternPreset from './pattern-preset.vue'
 interface HeatmapChartProps {
   data: HeatmapColumn[]
   gap?: number
+  cornerRadius?: number
+  legendCornerRadius?: number
   colorScale?: (count: number | null | undefined) => string
   levelColors?: HeatmapLevelColors
   levelStyles?: HeatmapLevelStyles
@@ -26,6 +28,8 @@ interface HeatmapChartProps {
 
 const props = withDefaults(defineProps<HeatmapChartProps>(), {
   gap: 2,
+  cornerRadius: 2,
+  legendCornerRadius: 2,
   colorScale: undefined,
   levelColors: undefined,
   levelStyles: undefined,
@@ -204,7 +208,8 @@ function tooltipDate(date: Date): string {
           :y="cell.y"
           :width="binSize"
           :height="binSize"
-          :rx="2"
+          :rx="cornerRadius"
+          :ry="cornerRadius"
           :fill="cell.fill"
           :fill-opacity="cell.fillOpacity"
           @pointerenter="onCellEnter(cell.column, cell.bin.bin, cell.bin)"
@@ -253,7 +258,7 @@ function tooltipDate(date: Date): string {
         v-for="(color, level) in legendColors"
         :key="level"
         class="heatmap-legend-swatch"
-        :style="{ background: color }"
+        :style="{ background: color, borderRadius: `${legendCornerRadius}px` }"
       />
       <span class="heatmap-legend-text">More</span>
     </div>
@@ -352,7 +357,6 @@ function tooltipDate(date: Date): string {
 .heatmap-legend-swatch {
   width: 11px;
   height: 11px;
-  border-radius: 2px;
 }
 
 .heatmap-legend-text {

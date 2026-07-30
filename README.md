@@ -169,14 +169,16 @@ Common: `data-key` (required), `y-axis-id`, `stroke`/`fill`, `animate`.
 
 ### `HeatmapChart`
 
-| Prop           | Type                        | Default                    |
-| -------------- | --------------------------- | -------------------------- |
-| `data`         | `HeatmapColumn[]`           | required                   |
-| `gap`          | `number`                    | `2`                        |
-| `level-colors` | `readonly [string, …5]`     | the `--chart-scale-*` set  |
-| `level-styles` | `readonly [LevelStyle, …5]` | solid, from `level-colors` |
-| `color-scale`  | `(count) => string`         | 0–4 level ramp             |
-| `format-label` | `(count, date) => string`   | `"N contributions"`        |
+| Prop                   | Type                        | Default                             |
+| ---------------------- | --------------------------- | ----------------------------------- |
+| `data`                 | `HeatmapColumn[]`           | required                            |
+| `gap`                  | `number`                    | `2`                                 |
+| `corner-radius`        | `number`                    | `2` (use a large value for circles) |
+| `legend-corner-radius` | `number`                    | `2`                                 |
+| `level-colors`         | `readonly [string, …5]`     | the `--chart-scale-*` set           |
+| `level-styles`         | `readonly [LevelStyle, …5]` | solid, from `level-colors`          |
+| `color-scale`          | `(count) => string`         | 0–4 level ramp                      |
+| `format-label`         | `(count, date) => string`   | `"N contributions"`                 |
 
 `count` is a raw domain value, not a level — the scale buckets it 0–4. For
 non-contribution data, override both the color scale and the tooltip label:
