@@ -5,6 +5,17 @@
   "packageManager": "pnpm@11.11.0",
   "description": "Composable Vue 3 chart components (bklit-ui port) — d3 + motion-v, SVG, fully themeable.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abdrizik/bklit-vue-charts.git"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "charts",
+    "d3",
+    "dataviz"
+  ],
   "sideEffects": [
     "**/*.css"
   ],
@@ -25,8 +36,7 @@
     "build": "vue-tsc --noEmit && vite build",
     "test": "vitest run",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "release:beta": "npm run build && npm publish --tag beta"
+    "format:check": "prettier --check ."
   },
   "peerDependencies": {
     "@vueuse/core": "^13.0.0 || ^14.0.0",
