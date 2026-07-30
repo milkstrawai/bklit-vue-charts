@@ -8,6 +8,7 @@ import {
   heatmapLevelPatternId,
   heatmapLevelPatternRenderOptions,
   isHeatmapLevelPattern,
+  levelColorsFromStyles,
   resolveHeatmapLevelStyles
 } from '../utils/heatmap-colors'
 import type { HeatmapLevelColors, HeatmapLevelStyles } from '../utils/heatmap-colors'
@@ -58,7 +59,11 @@ const patternLevels = computed(() =>
     }))
 )
 
-const legendColors = computed(() => [0, 1, 2, 3, 4].map((level) => resolvedColorScale.value(level)))
+const legendColors = computed(() =>
+  props.levelStyles || props.levelColors
+    ? levelColorsFromStyles(levelStyles.value)
+    : [0, 1, 2, 3, 4].map((level) => resolvedColorScale.value(level))
+)
 
 const MARGIN = { top: 28, right: 16, bottom: 0, left: 40 }
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
