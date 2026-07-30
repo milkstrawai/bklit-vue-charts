@@ -4,7 +4,7 @@ import { computed, useId } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import DateTicker from '../components/date-ticker.vue'
-import { intFmt, weekdayDateFmt, xLabel } from '../utils/chart-formatters'
+import { intFmt, longXLabel, xLabel } from '../utils/chart-formatters'
 
 export interface TooltipRow {
   color: string
@@ -84,8 +84,8 @@ const BOX_SPRING = { type: 'spring', stiffness: 100, damping: 20 } as const
 
 const datum = computed(() => (hover.active ? data.value[hover.index] : null))
 
-// Upstream resolves indicatorColor against the hovered point; a function with no
-// active point falls back to the crosshair var.
+// A function indicatorColor resolves against the hovered point; with no active
+// point it falls back to the crosshair var.
 const resolvedIndicatorColor = computed(() => {
   const c = props.indicatorColor
   if (c == null) {
@@ -97,13 +97,7 @@ const resolvedIndicatorColor = computed(() => {
   return c
 })
 
-const title = computed(() => {
-  if (!datum.value) {
-    return ''
-  }
-  const x = xAccessor(datum.value)
-  return x instanceof Date ? weekdayDateFmt.format(x) : String(x)
-})
+const title = computed(() => (datum.value ? longXLabel(xAccessor(datum.value)) : ''))
 
 const rows = computed<TooltipRow[]>(() => {
   const point = datum.value

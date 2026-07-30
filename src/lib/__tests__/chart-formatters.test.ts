@@ -1,37 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { intFmt, shortDateFmt, weekdayDateFmt, xLabel } from '../utils/chart-formatters'
-
-const sampleDates = [
-  new Date(2025, 0, 5, 9, 8, 7),
-  new Date(2024, 11, 31, 23, 59, 59),
-  new Date(2026, 6, 4, 12, 0, 0)
-]
+import { intFmt, longXLabel, xLabel } from '../utils/chart-formatters'
 
 const sampleNumbers = [0, 42, 1234, 1_234_567, -9876.5]
-
-describe('shortDateFmt', () => {
-  for (const date of sampleDates) {
-    it(`matches toLocaleDateString for ${date.toISOString()}`, () => {
-      expect(shortDateFmt.format(date)).toBe(
-        date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-      )
-    })
-  }
-})
-
-describe('weekdayDateFmt', () => {
-  for (const date of sampleDates) {
-    it(`matches toLocaleDateString for ${date.toISOString()}`, () => {
-      expect(weekdayDateFmt.format(date)).toBe(
-        date.toLocaleDateString('en-US', {
-          weekday: 'short',
-          month: 'short',
-          day: 'numeric'
-        })
-      )
-    })
-  }
-})
 
 describe('intFmt', () => {
   for (const value of sampleNumbers) {
@@ -57,5 +27,19 @@ describe('xLabel', () => {
 
   it('stringifies non-date, non-string values', () => {
     expect(xLabel(42)).toBe('42')
+  })
+})
+
+describe('longXLabel', () => {
+  it('formats a Date as weekday + short month + day', () => {
+    expect(longXLabel(new Date(2026, 5, 25))).toBe('Thu, Jun 25')
+  })
+
+  it('passes category strings through unchanged', () => {
+    expect(longXLabel('Jan')).toBe('Jan')
+  })
+
+  it('stringifies non-date, non-string values', () => {
+    expect(longXLabel(42)).toBe('42')
   })
 })
