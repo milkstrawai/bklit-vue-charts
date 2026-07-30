@@ -10,10 +10,8 @@ legend, tooltip, background patterns, brush zoom, and loading states.
 ## Install
 
 ```bash
-npm install bklit-vue-charts@beta vue @vueuse/core motion-v
+npm install bklit-vue-charts@beta
 ```
-
-`vue`, `@vueuse/core`, and `motion-v` are peer dependencies.
 
 ```ts
 import { LineChart, Line, Grid, XAxis, YAxis, ChartTooltip } from 'bklit-vue-charts'
@@ -222,6 +220,4 @@ const { xScale, getYScale, innerWidth, innerHeight, hover, series } = useChart()
 
 ## License
 
-MIT — see [LICENSE](./LICENSE). Ported from [bklit-ui](https://ui.bklit.com)
-(React/visx, MIT © uixmat), rebuilt on d3 + motion-v with
-[VueUse](https://vueuse.org).
+MIT — see [LICENSE](./LICENSE). Ported from [bklit-ui](https://ui.bklit.com).
