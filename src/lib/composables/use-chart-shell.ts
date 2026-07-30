@@ -3,6 +3,7 @@ import { scaleLinear } from 'd3-scale'
 import { computed, reactive, readonly, ref } from 'vue'
 import type { ComputedRef, PropType } from 'vue'
 import { DEFAULT_Y_AXIS_ID } from '../context'
+import { DEFAULT_ANIMATION_DURATION_MS } from '../utils/animation'
 import type { ChartContextValue, ChartDatum, Margin, LineConfig, XValue, YScale } from '../context'
 import { useProvideChart } from './use-chart'
 
@@ -27,7 +28,7 @@ export function chartShellProps(xKeyDefault: string) {
     },
     aspectRatio: { type: String, default: '2 / 1' },
     xDataKey: { type: String, default: xKeyDefault },
-    animationDuration: { type: Number, default: 1100 },
+    animationDuration: { type: Number, default: DEFAULT_ANIMATION_DURATION_MS },
     status: {
       type: String as PropType<'loading' | 'ready'>,
       default: 'ready' as const
@@ -198,7 +199,6 @@ export function useChartShell(props: ChartShellProps) {
     plotX,
     series,
     resolvedYKeys,
-    keysByAxis,
     makeYScales,
     provideContext
   }

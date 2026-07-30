@@ -3,6 +3,7 @@ import { motion } from 'motion-v'
 import { computed, onMounted, shallowRef } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
+import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_ANIMATION_EASING } from '../utils/animation'
 
 interface BarProps {
   dataKey: string
@@ -118,7 +119,7 @@ const bars = computed(() =>
   })
 )
 
-const ENTER_DURATION_MS = 1100
+const ENTER_DURATION_MS = DEFAULT_ANIMATION_DURATION_MS
 const staggerDelay = computed(
   () =>
     props.staggerDelay ??
@@ -142,7 +143,7 @@ function barTransition(index: number) {
   return {
     type: 'tween',
     duration: ENTER_DURATION_MS / 1000,
-    ease: [0.85, 0, 0.15, 1],
+    ease: DEFAULT_ANIMATION_EASING,
     delay: index * staggerDelay.value
   } as const
 }

@@ -2,6 +2,7 @@
 import { useElementSize } from '@vueuse/core'
 import { motion } from 'motion-v'
 import { computed, ref, shallowRef } from 'vue'
+import { DEFAULT_CHART_ENTER_TRANSITION } from '../utils/animation'
 import { intFmt } from '../utils/chart-formatters'
 import { funnelRingHoverScale, funnelRingLayer, funnelSegmentPath } from '../utils/funnel-geometry'
 
@@ -120,11 +121,7 @@ function ringHoverScale(ringIndex: number): number {
   return funnelRingHoverScale(ringIndex, props.layers)
 }
 
-const ENTER_TRANSITION = {
-  type: 'tween',
-  duration: 1.1,
-  ease: [0.85, 0, 0.15, 1]
-} as const
+const ENTER_TRANSITION = DEFAULT_CHART_ENTER_TRANSITION
 </script>
 
 <template>

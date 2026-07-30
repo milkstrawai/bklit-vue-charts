@@ -6,6 +6,7 @@ import { computed, useId } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum, SeriesPointMarkerStyle } from '../context'
 import { HIGHLIGHT_SPRING, useHighlightSegment } from '../composables/use-highlight-segment'
+import { DEFAULT_ANIMATION_EASING } from '../utils/animation'
 
 interface LineProps {
   dataKey: string
@@ -137,7 +138,7 @@ const pulseFadeId = `line-pulse-fade-${props.dataKey}-${useId()}`
 const PULSE_CLIP_PADDING = 10
 const PULSE_CYCLE_S = 2.2
 const PULSE_PAUSE_S = 0.28
-const PULSE_EASE = [0.85, 0, 0.15, 1] as const
+const PULSE_EASE = DEFAULT_ANIMATION_EASING
 
 const paddedFullWidth = computed(() => innerWidth.value + PULSE_CLIP_PADDING * 2)
 const pulseRightEdge = computed(() => innerWidth.value + PULSE_CLIP_PADDING)

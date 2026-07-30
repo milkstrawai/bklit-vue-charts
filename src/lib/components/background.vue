@@ -41,7 +41,7 @@ const TILE_BASE: Record<BackgroundPattern, number> = {
 }
 const size = computed(() => TILE_BASE[props.pattern] * props.scale)
 
-// Per-preset base stroke, scaled — dots are fill-only upstream.
+// Per-preset base stroke, scaled — the dots preset is fill-only.
 const STROKE_BASE: Record<BackgroundPattern, number> = {
   diagonal: 1,
   horizontal: 1,
