@@ -37,3 +37,24 @@ export type { TooltipRow } from './components/chart-tooltip.vue'
 export type { ChartBrushSelection } from './components/chart-brush.vue'
 export type { FunnelGradientStop, FunnelStage } from './components/funnel-chart.vue'
 export type { HeatmapBin, HeatmapColumn } from './utils/heatmap-utils'
+export { formatHeatmapContributionLabel, getHeatmapContributionLevel } from './utils/heatmap-utils'
+export type {
+  HeatmapLevelColors,
+  HeatmapLevelFillMode,
+  HeatmapLevelStyle,
+  HeatmapLevelStyles
+} from './utils/heatmap-colors'
+export {
+  buildHeatmapColorScale,
+  buildHeatmapColorScaleFromStyles,
+  buildHeatmapFillScale,
+  defaultHeatmapColorScale,
+  defaultHeatmapFillScale,
+  HEATMAP_DEFAULT_LEVEL_COLORS,
+  HEATMAP_DEFAULT_LEVEL_STYLES,
+  levelColorsFromStyles,
+  levelStylesFromColors,
+  resolveHeatmapLevelStyles
+} from './utils/heatmap-colors'
+export type { PatternPresetId, PatternPresetOptions } from './utils/pattern-preset'
+export { PATTERN_PRESET_IDS, patternPresetTileSize } from './utils/pattern-preset'

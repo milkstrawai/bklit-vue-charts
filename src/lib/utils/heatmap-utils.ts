@@ -13,3 +13,7 @@ export interface HeatmapColumn {
 export function getHeatmapContributionLevel(count: number): number {
   return Math.min(Math.max(0, Math.trunc(count)), 4)
 }
+
+export function formatHeatmapContributionLabel(count: number, _date?: Date): string {
+  return `${count} ${count === 1 ? 'contribution' : 'contributions'}`
+}

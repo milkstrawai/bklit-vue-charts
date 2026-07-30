@@ -167,6 +167,48 @@ Common: `data-key` (required), `y-axis-id`, `stroke`/`fill`, `animate`.
 - **Area** — `fill-opacity` (0.4), `gradient-to-opacity` (0), `gradient-span`, `show-line` (true), `fade-edges` (false), `curve`, `show-markers` + `markers`
 - **Bar** — `line-cap` (`"round" | "butt" | number`), `animation-type` (`"grow" | "fade"`), `stagger-delay`, `min-bar-height`, `faded-opacity`, `group-gap`
 
+### `HeatmapChart`
+
+| Prop           | Type                        | Default                    |
+| -------------- | --------------------------- | -------------------------- |
+| `data`         | `HeatmapColumn[]`           | required                   |
+| `gap`          | `number`                    | `2`                        |
+| `level-colors` | `readonly [string, …5]`     | the `--chart-scale-*` set  |
+| `level-styles` | `readonly [LevelStyle, …5]` | solid, from `level-colors` |
+| `color-scale`  | `(count) => string`         | 0–4 level ramp             |
+| `format-label` | `(count, date) => string`   | `"N contributions"`        |
+
+`count` is a raw domain value, not a level — the scale buckets it 0–4. For
+non-contribution data, override both the color scale and the tooltip label:
+
+```vue
+<HeatmapChart
+  :data="weeks"
+  :color-scale="
+    (usd) => buildHeatmapColorScale(GREENS)(usd == null ? 0 : Math.min(4, Math.floor(usd / 500)))
+  "
+  :format-label="(usd) => `${formatCurrency(usd)} saved`"
+/>
+```
+
+`level-styles` takes precedence over `level-colors` and adds pattern fills per
+level — the same presets `Background` uses (`diagonal`, `horizontal`, `vertical`,
+`cross`, `dots`, `circles`, `accent`):
+
+```ts
+const levelStyles = [
+  { color: 'var(--chart-scale-01)' },
+  { color: 'var(--chart-scale-02)' },
+  { color: 'var(--chart-scale-03)' },
+  { color: 'var(--chart-scale-04)' },
+  { color: 'var(--chart-scale-05)', fillMode: 'pattern', pattern: 'diagonal', patternOpacity: 0.9 }
+] as const
+```
+
+Per-level knobs: `pattern-color`, `pattern-scale`, `pattern-stroke-width`,
+`pattern-radius`, `pattern-fill`, `pattern-tile-background`, `pattern-opacity`,
+`pattern-dots-fill`, `pattern-complement`.
+
 ### `useChart()`
 
 Any component inside a chart can read the context:

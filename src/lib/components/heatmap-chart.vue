@@ -1,34 +1,60 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, shallowRef } from 'vue'
-import { getHeatmapContributionLevel } from '../utils/heatmap-utils'
+import {
+  buildHeatmapColorScaleFromStyles,
+  buildHeatmapFillScale,
+  heatmapLevelCellFillOpacity,
+  heatmapLevelPatternId,
+  heatmapLevelPatternRenderOptions,
+  isHeatmapLevelPattern,
+  resolveHeatmapLevelStyles
+} from '../utils/heatmap-colors'
+import type { HeatmapLevelColors, HeatmapLevelStyles } from '../utils/heatmap-colors'
+import { formatHeatmapContributionLabel, getHeatmapContributionLevel } from '../utils/heatmap-utils'
 import type { HeatmapBin, HeatmapColumn } from '../utils/heatmap-utils'
+import PatternPreset from './pattern-preset.vue'
 
 interface HeatmapChartProps {
   data: HeatmapColumn[]
   gap?: number
-  /**
-   * Map a bin's `count` to a 0–4 intensity. Override when `count` carries a
-   * domain value (revenue, savings) rather than an event tally.
-   */
-  level?: (count: number) => number
-  /** Tooltip text for a bin's `count`. Default: "12 contributions". */
-  formatValue?: (count: number) => string
+  colorScale?: (count: number | null | undefined) => string
+  levelColors?: HeatmapLevelColors
+  levelStyles?: HeatmapLevelStyles
+  formatLabel?: (count: number, date: Date) => string
 }
 
 const props = withDefaults(defineProps<HeatmapChartProps>(), {
   gap: 2,
-  level: getHeatmapContributionLevel,
-  formatValue: (count: number) => `${count} contribution${count === 1 ? '' : 's'}`
+  colorScale: undefined,
+  levelColors: undefined,
+  levelStyles: undefined,
+  formatLabel: formatHeatmapContributionLabel
 })
 
-const LEVEL_COLORS = [
-  'var(--chart-scale-01)',
-  'var(--chart-scale-02)',
-  'var(--chart-scale-03)',
-  'var(--chart-scale-04)',
-  'var(--chart-scale-05)'
-]
+const levelStyles = computed(() => resolveHeatmapLevelStyles(props.levelColors, props.levelStyles))
+
+const resolvedColorScale = computed(
+  () => props.colorScale ?? buildHeatmapColorScaleFromStyles(levelStyles.value)
+)
+
+const fillScale = computed(() =>
+  props.colorScale ? props.colorScale : buildHeatmapFillScale(levelStyles.value)
+)
+
+const patternLevels = computed(() =>
+  levelStyles.value
+    .map((style, level) => ({ style, level }))
+    .filter(({ style }) => isHeatmapLevelPattern(style))
+    .map(({ style, level }) => ({
+      level,
+      id: heatmapLevelPatternId(level),
+      pattern: style.pattern ?? 'diagonal',
+      options: heatmapLevelPatternRenderOptions(style)
+    }))
+)
+
+const legendColors = computed(() => [0, 1, 2, 3, 4].map((level) => resolvedColorScale.value(level)))
 
 const MARGIN = { top: 28, right: 16, bottom: 0, left: 40 }
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -52,6 +78,35 @@ function cellX(column: number): number {
 function cellY(row: number): number {
   return MARGIN.top + row * cellSize.value
 }
+
+interface HeatmapCell {
+  key: string
+  bin: HeatmapBin
+  column: number
+  x: number
+  y: number
+  fill: string
+  fillOpacity: number
+}
+
+const cells = computed<HeatmapCell[]>(() =>
+  props.data.flatMap((column, columnIndex) =>
+    column.bins
+      .filter((bin) => bin.count >= 0)
+      .map((bin) => {
+        const level = getHeatmapContributionLevel(bin.count)
+        return {
+          key: `${column.bin}-${bin.bin}`,
+          bin,
+          column: columnIndex,
+          x: cellX(columnIndex),
+          y: cellY(bin.bin),
+          fill: fillScale.value(bin.count),
+          fillOpacity: heatmapLevelCellFillOpacity(levelStyles.value[level] ?? levelStyles.value[0])
+        }
+      })
+  )
+)
 
 const monthTicks = computed(() => {
   const ticks: { key: string; x: number; label: string }[] = []
@@ -131,21 +186,29 @@ function tooltipDate(date: Date): string {
       @pointerleave="hovered = null"
     >
       <svg v-if="width > 0" :width="width" :height="gridHeight">
-        <template v-for="(column, columnIndex) in data" :key="column.bin">
-          <template v-for="bin in column.bins" :key="bin.bin">
-            <rect
-              v-if="bin.count >= 0"
-              class="heatmap-cell"
-              :x="cellX(columnIndex)"
-              :y="cellY(bin.bin)"
-              :width="binSize"
-              :height="binSize"
-              :rx="2"
-              :fill="LEVEL_COLORS[props.level(bin.count)]"
-              @pointerenter="onCellEnter(columnIndex, bin.bin, bin)"
-            />
-          </template>
-        </template>
+        <defs v-if="patternLevels.length > 0">
+          <PatternPreset
+            v-for="entry in patternLevels"
+            :key="entry.id"
+            :id="entry.id"
+            :pattern="entry.pattern"
+            :options="entry.options"
+          />
+        </defs>
+
+        <rect
+          v-for="cell in cells"
+          :key="cell.key"
+          class="heatmap-cell"
+          :x="cell.x"
+          :y="cell.y"
+          :width="binSize"
+          :height="binSize"
+          :rx="2"
+          :fill="cell.fill"
+          :fill-opacity="cell.fillOpacity"
+          @pointerenter="onCellEnter(cell.column, cell.bin.bin, cell.bin)"
+        />
       </svg>
 
       <span
@@ -179,7 +242,7 @@ function tooltipDate(date: Date): string {
         </span>
         <span class="heatmap-tooltip-divider" />
         <span class="heatmap-tooltip-count">
-          {{ props.formatValue(hovered.bin.count) }}
+          {{ props.formatLabel(hovered.bin.count, hovered.bin.date) }}
         </span>
       </div>
     </div>
@@ -187,8 +250,8 @@ function tooltipDate(date: Date): string {
     <div class="heatmap-legend">
       <span class="heatmap-legend-text">Less</span>
       <span
-        v-for="color in LEVEL_COLORS"
-        :key="color"
+        v-for="(color, level) in legendColors"
+        :key="level"
         class="heatmap-legend-swatch"
         :style="{ background: color }"
       />
