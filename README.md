@@ -176,8 +176,8 @@ import { useChart } from 'bklit-vue-charts'
 const { xScale, getYScale, innerWidth, innerHeight, hover, series } = useChart()
 ```
 
-## Credits
+## License
 
-A Vue port of the charts from [bklit-ui](https://ui.bklit.com) (React/visx),
-rebuilt on d3 + motion-v, with element sizing and context via
+MIT — see [LICENSE](./LICENSE). Ported from [bklit-ui](https://ui.bklit.com)
+(React/visx, MIT © uixmat), rebuilt on d3 + motion-v with
 [VueUse](https://vueuse.org).
