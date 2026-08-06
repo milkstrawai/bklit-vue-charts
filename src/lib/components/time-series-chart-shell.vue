@@ -72,9 +72,15 @@ const xScale = computed(() => {
 })
 
 const yScales = makeYScales((keys) => {
-  const lo = min(props.data, (d) => min(keys, (k) => d[k] as number)) ?? 0
-  const hi = max(props.data, (d) => max(keys, (k) => d[k] as number)) ?? 1
-  const pad = (hi - lo) * 0.15 || 1
+  const lo = min(props.data, (d) => min(keys, (k) => d[k] as number))
+  const hi = max(props.data, (d) => max(keys, (k) => d[k] as number))
+  if (lo === undefined || hi === undefined) {
+    return [0, 100]
+  }
+  if (lo >= 0) {
+    return [0, hi <= 0 ? 100 : hi * 1.1]
+  }
+  const pad = (hi - lo) * 0.05 || 1
   return [lo - pad, hi + pad]
 })
 const getYScale = (yAxisId: string = DEFAULT_Y_AXIS_ID): YScale =>
