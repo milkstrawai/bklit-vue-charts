@@ -1,6 +1,6 @@
 // Chart roots
-export { default as LineChart } from './components/time-series-chart-shell.vue'
-export { default as AreaChart } from './components/time-series-chart-shell.vue'
+export { default as LineChart } from './components/line-chart.vue'
+export { default as AreaChart } from './components/area-chart.vue'
 export { default as BarChart } from './components/bar-chart.vue'
 
 // Series + chrome

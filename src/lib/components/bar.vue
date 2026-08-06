@@ -89,6 +89,7 @@ function barX(datum: ChartDatum): number {
 }
 
 registerSeries({
+  kind: 'bar',
   dataKey: props.dataKey,
   color: props.fill,
   yAxisId: props.yAxisId,

@@ -66,6 +66,7 @@ const hidden = computed(() => isSeriesHidden(props.dataKey))
 const yScale = computed(() => getYScale(props.yAxisId))
 
 registerSeries({
+  kind: 'line',
   dataKey: props.dataKey,
   color: props.stroke,
   yAxisId: props.yAxisId

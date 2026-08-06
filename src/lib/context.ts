@@ -21,6 +21,8 @@ export interface HoverState {
 export interface LineConfig {
   dataKey: string
   color: string
+  /** Renderer that registered this series; decides whether it drives the y-domain. */
+  kind?: 'line' | 'area' | 'bar'
   /** Y-scale group; pairs with a matching YAxis. Default: "left". */
   yAxisId?: string
   /** Overrides the tooltip dot x (bars center the dot on their own bar). */

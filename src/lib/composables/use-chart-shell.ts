@@ -1,7 +1,7 @@
 import { useElementSize } from '@vueuse/core'
 import { scaleLinear } from 'd3-scale'
 import { computed, reactive, readonly, ref } from 'vue'
-import type { ComputedRef, PropType } from 'vue'
+import type { ComputedRef, PropType, Ref } from 'vue'
 import { DEFAULT_Y_AXIS_ID } from '../context'
 import { DEFAULT_ANIMATION_DURATION_MS } from '../utils/animation'
 import type { ChartContextValue, ChartDatum, Margin, LineConfig, XValue, YScale } from '../context'
@@ -46,12 +46,17 @@ type ProvidedScales = Pick<
   'renderData' | 'xScale' | 'yScale' | 'yScales' | 'getYScale'
 > & { revealClipId?: string; bar?: ChartContextValue['bar'] }
 
+export interface ChartShellOptions {
+  /** Restricts which series drive the y-domain. Default: all of them. */
+  domainSeriesFilter?: (entry: LineConfig) => boolean
+}
+
 /**
  * Shared chart-shell logic: container sizing, hover state, series registry,
  * per-axis y-scales, and the provided context. Each shell supplies its own
  * x-scale, pointer snapping, and y-domain rule.
  */
-export function useChartShell(props: ChartShellProps) {
+export function useChartShell(props: ChartShellProps, options: ChartShellOptions = {}) {
   const containerRef = ref<HTMLDivElement | null>(null)
   const { width, height } = useElementSize(containerRef)
 
@@ -120,12 +125,16 @@ export function useChartShell(props: ChartShellProps) {
 
   const resolvedYKeys = computed(() => series.map((s) => s.dataKey))
 
+  const domainSeries = computed(() =>
+    options.domainSeriesFilter ? series.filter(options.domainSeriesFilter) : [...series]
+  )
+
   const keysByAxis = computed<Record<string, string[]>>(() => {
-    if (series.length === 0) {
+    if (domainSeries.value.length === 0) {
       return { [DEFAULT_Y_AXIS_ID]: [] }
     }
     const groups: Record<string, string[]> = {}
-    for (const s of series) {
+    for (const s of domainSeries.value) {
       const axis = s.yAxisId ?? DEFAULT_Y_AXIS_ID
       ;(groups[axis] ??= []).push(s.dataKey)
     }
@@ -145,6 +154,22 @@ export function useChartShell(props: ChartShellProps) {
           .domain(domainFor(keys))
           .range([innerHeight.value, 0])
           .nice() as unknown as YScale
+      }
+      return scales
+    })
+  }
+
+  /** Build y-scales from externally owned domains (already `nice()`d, possibly mid-tween). */
+  function makeYScalesFromDomains(
+    domains: Ref<Record<string, [number, number]>>
+  ): ComputedRef<Record<string, YScale>> {
+    return computed(() => {
+      const scales: Record<string, YScale> = {}
+      for (const axis of Object.keys(keysByAxis.value)) {
+        const domain = domains.value[axis] ?? domains.value[DEFAULT_Y_AXIS_ID] ?? [0, 100]
+        scales[axis] = scaleLinear()
+          .domain(domain)
+          .range([innerHeight.value, 0]) as unknown as YScale
       }
       return scales
     })
@@ -199,7 +224,9 @@ export function useChartShell(props: ChartShellProps) {
     plotX,
     series,
     resolvedYKeys,
+    keysByAxis,
     makeYScales,
+    makeYScalesFromDomains,
     provideContext
   }
 }

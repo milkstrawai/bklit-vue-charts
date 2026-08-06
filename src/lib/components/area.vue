@@ -76,6 +76,7 @@ const resolvedStroke = computed(() => props.stroke ?? props.fill)
 const midOffset = computed(() => `${Math.min(1, Math.max(0.01, props.gradientSpan)) * 100}%`)
 
 registerSeries({
+  kind: 'area',
   dataKey: props.dataKey,
   color: resolvedStroke.value,
   yAxisId: props.yAxisId

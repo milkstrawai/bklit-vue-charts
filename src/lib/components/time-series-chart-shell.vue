@@ -6,12 +6,19 @@ import { computed, shallowRef, useId, watch } from 'vue'
 import type { ComputedRef } from 'vue'
 import { DEFAULT_CHART_ENTER_TRANSITION, DEFAULT_Y_AXIS_ID } from '../context'
 import type { ChartDatum, XScale, YScale } from '../context'
-import { chartShellProps, useChartShell } from '../composables/use-chart-shell'
+import { useChartShell } from '../composables/use-chart-shell'
+import { useAnimatedYDomains } from '../composables/use-animated-y-domains'
+import { niceYDomain, resolveTimeSeriesYDomain } from '../utils/y-domain'
+import type { YDomain } from '../utils/y-domain'
+import { timeSeriesChartProps } from './time-series-chart-props'
 
 const props = defineProps({
-  ...chartShellProps('date'),
-  /** Visible x-range for brush zoom; defaults to the full data extent. */
-  xDomain: { type: Array as unknown as () => [Date, Date], default: undefined }
+  ...timeSeriesChartProps(),
+  /** `"line"` keeps areas and bars out of the y-domain; `"area"` counts every series. */
+  domainSeriesKind: {
+    type: String as unknown as () => 'line' | 'area',
+    default: 'line' as const
+  }
 })
 
 const {
@@ -25,9 +32,13 @@ const {
   xAccessor,
   plotX,
   resolvedYKeys,
-  makeYScales,
+  keysByAxis,
+  makeYScalesFromDomains,
   provideContext
-} = useChartShell(props)
+} = useChartShell(props, {
+  domainSeriesFilter: (entry) =>
+    props.domainSeriesKind === 'area' || (entry.kind !== 'area' && entry.kind !== 'bar')
+})
 
 const dateAccessor = (datum: ChartDatum): Date => xAccessor(datum) as Date
 
@@ -71,18 +82,39 @@ const xScale = computed(() => {
     .range([0, innerWidth.value])
 })
 
-const yScales = makeYScales((keys) => {
-  const lo = min(props.data, (d) => min(keys, (k) => d[k] as number))
-  const hi = max(props.data, (d) => max(keys, (k) => d[k] as number))
-  if (lo === undefined || hi === undefined) {
-    return [0, 100]
+const yDomainData = computed(() => {
+  if (!props.xDomain) {
+    return props.data
   }
-  if (lo >= 0) {
-    return [0, hi <= 0 ? 100 : hi * 1.1]
-  }
-  const pad = (hi - lo) * 0.05 || 1
-  return [lo - pad, hi + pad]
+  const [from, to] = props.xDomain
+  const start = Math.min(from.getTime(), to.getTime())
+  const end = Math.max(from.getTime(), to.getTime())
+  return props.data.filter((d) => {
+    const time = dateAccessor(d).getTime()
+    return time >= start && time <= end
+  })
 })
+
+const numeric = (datum: ChartDatum, key: string): number | undefined =>
+  typeof datum[key] === 'number' ? (datum[key] as number) : undefined
+
+const yDomainTarget = computed<Record<string, YDomain>>(() => {
+  const domains: Record<string, YDomain> = {}
+  for (const [axis, keys] of Object.entries(keysByAxis.value)) {
+    const lo = min(yDomainData.value, (d) => min(keys, (k) => numeric(d, k)))
+    const hi = max(yDomainData.value, (d) => max(keys, (k) => numeric(d, k)))
+    domains[axis] = niceYDomain(resolveTimeSeriesYDomain(lo, hi))
+  }
+  return domains
+})
+
+const animatedYDomains = useAnimatedYDomains({
+  target: yDomainTarget,
+  enabled: () => props.yDomainTween || (props.tweenYDomainOnXDomainChange && props.xDomain != null),
+  durationMs: () => props.yDomainTweenDuration
+})
+
+const yScales = makeYScalesFromDomains(animatedYDomains)
 const getYScale = (yAxisId: string = DEFAULT_Y_AXIS_ID): YScale =>
   yScales.value[yAxisId] ?? yScales.value[DEFAULT_Y_AXIS_ID]
 const yScale = computed(() => getYScale())
