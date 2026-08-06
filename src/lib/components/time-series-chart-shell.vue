@@ -9,6 +9,7 @@ import type { ChartDatum, XScale, YScale } from '../context'
 import { useChartShell } from '../composables/use-chart-shell'
 import { useAnimatedYDomains } from '../composables/use-animated-y-domains'
 import { clipRevealTransition, DEFAULT_CHART_ENTER_TRANSITION } from '../utils/animation'
+import { decimateTimeSeries, maxRenderPointsForWidth } from '../utils/decimate-time-series'
 import { niceYDomain, resolveTimeSeriesYDomain } from '../utils/y-domain'
 import type { YDomain } from '../utils/y-domain'
 import { timeSeriesChartProps } from './time-series-chart-props'
@@ -71,6 +72,14 @@ watch(
       }
     })
   }
+)
+
+const decimatedData = computed(() =>
+  decimateTimeSeries(
+    renderData.value,
+    maxRenderPointsForWidth(innerWidth.value),
+    resolvedYKeys.value
+  )
 )
 
 const xScale = computed(() => {
@@ -147,13 +156,13 @@ const revealTransition = computed(() =>
 )
 
 const revealAnimating = computed(
-  () => renderData.value.length > 1 && innerWidth.value > 0 && props.animationDuration > 0
+  () => decimatedData.value.length > 1 && innerWidth.value > 0 && props.animationDuration > 0
 )
 
 const revealClipId = `chart-reveal-${useId()}`
 
 provideContext({
-  renderData,
+  renderData: decimatedData,
   xScale: xScale as unknown as ComputedRef<XScale>,
   yScale,
   yScales,
