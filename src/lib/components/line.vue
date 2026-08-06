@@ -29,7 +29,6 @@ interface LineProps {
   dashFromIndex?: number
   /** Dash pattern for the tail segment. Default: "6,4" */
   dashArray?: string
-  /** Print each point's value above it. Default: false */
 }
 
 const props = withDefaults(defineProps<LineProps>(), {

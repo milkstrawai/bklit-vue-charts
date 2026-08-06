@@ -2,12 +2,13 @@
 import { bisector, extent, max, min } from 'd3-array'
 import { scaleTime } from 'd3-scale'
 import { animate, motion } from 'motion-v'
-import { computed, shallowRef, useId, watch } from 'vue'
+import { computed, ref, shallowRef, useId, watch } from 'vue'
 import type { ComputedRef } from 'vue'
-import { DEFAULT_CHART_ENTER_TRANSITION, DEFAULT_Y_AXIS_ID } from '../context'
+import { DEFAULT_Y_AXIS_ID } from '../context'
 import type { ChartDatum, XScale, YScale } from '../context'
 import { useChartShell } from '../composables/use-chart-shell'
 import { useAnimatedYDomains } from '../composables/use-animated-y-domains'
+import { clipRevealTransition, DEFAULT_CHART_ENTER_TRANSITION } from '../utils/animation'
 import { niceYDomain, resolveTimeSeriesYDomain } from '../utils/y-domain'
 import type { YDomain } from '../utils/y-domain'
 import { timeSeriesChartProps } from './time-series-chart-props'
@@ -131,6 +132,24 @@ function onPointerMove(event: PointerEvent): void {
   commitHover(index, xScale.value(dateAccessor(props.data[index])))
 }
 
+const revealEpoch = ref(0)
+watch([() => props.revealSignature, () => props.animationDuration], () => {
+  revealEpoch.value += 1
+})
+
+const revealTransition = computed(() =>
+  clipRevealTransition(
+    props.enterTransition ?? {
+      ...DEFAULT_CHART_ENTER_TRANSITION,
+      duration: props.animationDuration / 1000
+    }
+  )
+)
+
+const revealAnimating = computed(
+  () => renderData.value.length > 1 && innerWidth.value > 0 && props.animationDuration > 0
+)
+
 const revealClipId = `chart-reveal-${useId()}`
 
 provideContext({
@@ -156,12 +175,15 @@ provideContext({
         <defs>
           <clipPath :id="revealClipId">
             <motion.rect
+              v-if="revealAnimating"
+              :key="revealEpoch"
               :height="innerHeight + 20"
               :y="0"
               :initial="{ width: 0 }"
               :animate="{ width: innerWidth }"
-              :transition="DEFAULT_CHART_ENTER_TRANSITION"
+              :transition="revealTransition"
             />
+            <rect v-else :height="innerHeight + 20" :width="innerWidth" :y="0" />
           </clipPath>
         </defs>
         <g :transform="`translate(${margin.left},${margin.top})`">
