@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
-import { computed, ref, shallowRef } from 'vue'
+import { useElementSize, useTimeoutFn } from '@vueuse/core'
+import { AnimatePresence, motion } from 'motion-v'
+import { computed, ref, shallowRef, watch } from 'vue'
 import {
   buildHeatmapColorScaleFromStyles,
   buildHeatmapFillScale,
@@ -25,6 +26,12 @@ interface HeatmapChartProps {
   levelColors?: HeatmapLevelColors
   levelStyles?: HeatmapLevelStyles
   formatLabel?: (count: number, date: Date) => string
+  /** Delay before showing the tooltip on first hover (ms). */
+  showDelay?: number
+  /** Grace period before hiding when the pointer leaves a cell (ms). */
+  hideDelay?: number
+  /** Appear and disappear instantly with no motion. */
+  instant?: boolean
 }
 
 const props = withDefaults(defineProps<HeatmapChartProps>(), {
@@ -34,7 +41,10 @@ const props = withDefaults(defineProps<HeatmapChartProps>(), {
   colorScale: undefined,
   levelColors: undefined,
   levelStyles: undefined,
-  formatLabel: formatHeatmapContributionLabel
+  formatLabel: formatHeatmapContributionLabel,
+  showDelay: 0,
+  hideDelay: 120,
+  instant: false
 })
 
 const levelStyles = computed(() => resolveHeatmapLevelStyles(props.levelColors, props.levelStyles))
@@ -165,6 +175,78 @@ function onCellEnter(column: number, row: number, bin: HeatmapBin): void {
   }
 }
 
+const TOOLTIP_OFFSET = 16
+const TOOLTIP_PANEL_SPRING = { type: 'spring', stiffness: 300, damping: 25 } as const
+
+const displayed = shallowRef<HoveredCell | null>(null)
+let isShowing = false
+
+const show = useTimeoutFn(
+  () => {
+    isShowing = true
+    displayed.value = hovered.value
+  },
+  () => props.showDelay,
+  { immediate: false }
+)
+
+const hide = useTimeoutFn(
+  () => {
+    isShowing = false
+    displayed.value = null
+  },
+  () => props.hideDelay,
+  { immediate: false }
+)
+
+watch(hovered, (cell) => {
+  show.stop()
+  hide.stop()
+
+  if (!cell) {
+    if (props.hideDelay === 0) {
+      isShowing = false
+      displayed.value = null
+      return
+    }
+
+    hide.start()
+    return
+  }
+
+  if (isShowing || props.showDelay === 0) {
+    isShowing = true
+    displayed.value = cell
+    return
+  }
+
+  show.start()
+})
+
+const tooltipRef = ref<HTMLDivElement | null>(null)
+const { width: tooltipWidth, height: tooltipHeight } = useElementSize(tooltipRef)
+
+// Fallbacks until the panel has been measured, matching the upstream defaults.
+const panelWidth = computed(() => tooltipWidth.value || 180)
+const panelHeight = computed(() => tooltipHeight.value || 80)
+
+const tooltipFlipped = computed(
+  () => (displayed.value?.x ?? 0) + panelWidth.value + TOOLTIP_OFFSET > width.value
+)
+
+const tooltipPosition = computed(() => {
+  const { x, y } = displayed.value ?? { x: 0, y: 0 }
+  const top = Math.min(
+    y - panelHeight.value / 2,
+    gridHeight.value - panelHeight.value - TOOLTIP_OFFSET
+  )
+
+  return {
+    left: `${tooltipFlipped.value ? x - TOOLTIP_OFFSET - panelWidth.value : x + TOOLTIP_OFFSET}px`,
+    top: `${Math.max(TOOLTIP_OFFSET, top)}px`
+  }
+})
+
 const longMonthFmt = new Intl.DateTimeFormat('en-US', { month: 'long' })
 const weekdayLongFmt = new Intl.DateTimeFormat('en-US', { weekday: 'long' })
 function ordinal(day: number): string {
@@ -239,22 +321,38 @@ function tooltipDate(date: Date): string {
         {{ tick.label }}
       </span>
 
-      <div
-        v-if="hovered"
-        class="heatmap-tooltip"
-        :style="{ left: `${hovered.x}px`, top: `${hovered.y - 8}px` }"
-      >
-        <span class="heatmap-tooltip-date">
-          {{ tooltipDate(hovered.bin.date) }}
-        </span>
-        <span class="heatmap-tooltip-weekday">
-          {{ weekdayLongFmt.format(hovered.bin.date) }}
-        </span>
-        <span class="heatmap-tooltip-divider" />
-        <span class="heatmap-tooltip-count">
-          {{ props.formatLabel(hovered.bin.count, hovered.bin.date) }}
-        </span>
-      </div>
+      <AnimatePresence>
+        <motion.div
+          v-if="displayed"
+          ref="tooltipRef"
+          class="heatmap-tooltip"
+          :style="tooltipPosition"
+          :initial="instant ? false : { opacity: 0 }"
+          :animate="{ opacity: 1 }"
+          :exit="{ opacity: 0 }"
+          :transition="{ duration: 0.1 }"
+        >
+          <motion.div
+            :key="tooltipFlipped ? 'flipped' : 'default'"
+            class="heatmap-tooltip-panel"
+            :style="{ transformOrigin: tooltipFlipped ? 'right top' : 'left top' }"
+            :initial="instant ? false : { scale: 0.85, opacity: 0, x: tooltipFlipped ? 20 : -20 }"
+            :animate="{ scale: 1, opacity: 1, x: 0 }"
+            :transition="TOOLTIP_PANEL_SPRING"
+          >
+            <span class="heatmap-tooltip-date">
+              {{ tooltipDate(displayed.bin.date) }}
+            </span>
+            <span class="heatmap-tooltip-weekday">
+              {{ weekdayLongFmt.format(displayed.bin.date) }}
+            </span>
+            <span class="heatmap-tooltip-divider" />
+            <span class="heatmap-tooltip-count">
+              {{ props.formatLabel(displayed.bin.count, displayed.bin.date) }}
+            </span>
+          </motion.div>
+        </motion.div>
+      </AnimatePresence>
     </div>
 
     <div class="heatmap-legend">
@@ -315,17 +413,21 @@ function tooltipDate(date: Date): string {
 .heatmap-tooltip {
   position: absolute;
   z-index: 50;
-  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+
+.heatmap-tooltip-panel {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 140px;
+  overflow: hidden;
   border-radius: 8px;
   background: var(--chart-tooltip-background);
   color: var(--chart-tooltip-foreground);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 8px 12px;
-  pointer-events: none;
   white-space: nowrap;
   box-shadow:
     0 10px 15px -3px rgb(0 0 0 / 0.1),

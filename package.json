@@ -1,6 +1,6 @@
 {
   "name": "bklit-vue-charts",
-  "version": "0.1.0-beta.8",
+  "version": "0.1.0-beta.9",
   "type": "module",
   "packageManager": "pnpm@11.11.0",
   "description": "Composable Vue 3 chart components (bklit-ui port) — d3 + motion-v, SVG, fully themeable.",
