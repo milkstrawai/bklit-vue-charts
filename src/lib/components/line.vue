@@ -53,7 +53,6 @@ const {
   innerHeight,
   xAccessor,
   hover,
-  legend,
   series,
   status,
   registerSeries,
@@ -77,11 +76,7 @@ const seriesIndex = computed(() =>
     series.findIndex((s) => s.dataKey === props.dataKey)
   )
 )
-const dimmed = computed(
-  () =>
-    (props.showHighlight && hover.active) ||
-    (legend.hoveredIndex !== null && legend.hoveredIndex !== seriesIndex.value)
-)
+const dimmed = computed(() => props.showHighlight && hover.active)
 
 function pathFor(rows: ChartDatum[]): string {
   return (

@@ -102,13 +102,6 @@ export function useChartShell(props: ChartShellProps, options: ChartShellOptions
     }
   }
 
-  const legend = reactive<{ hoveredIndex: number | null }>({
-    hoveredIndex: null
-  })
-  function setLegendHover(index: number | null): void {
-    legend.hoveredIndex = index
-  }
-
   const hidden = reactive(new Set<string>())
   function isSeriesHidden(dataKey: string): boolean {
     return hidden.has(dataKey)
@@ -194,8 +187,6 @@ export function useChartShell(props: ChartShellProps, options: ChartShellOptions
       margin: computed(() => props.margin),
       xAccessor,
       hover: readonly(hover),
-      legend: readonly(legend),
-      setLegendHover,
       hiddenKeys: hidden as Readonly<Set<string>>,
       isSeriesHidden,
       toggleSeries,

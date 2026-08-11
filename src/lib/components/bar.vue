@@ -45,7 +45,6 @@ const {
   innerHeight,
   xAccessor,
   hover,
-  legend,
   series,
   registerSeries,
   isSeriesHidden,
@@ -160,9 +159,6 @@ function barInitial(bar: { y: number; height: number }) {
 }
 
 function barOpacity(index: number): number {
-  if (legend.hoveredIndex !== null && legend.hoveredIndex !== seriesIndex.value) {
-    return props.fadedOpacity
-  }
   return hover.active && hover.index !== index ? props.fadedOpacity : 1
 }
 </script>

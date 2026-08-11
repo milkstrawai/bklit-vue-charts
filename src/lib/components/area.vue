@@ -63,7 +63,6 @@ const {
   innerHeight,
   xAccessor,
   hover,
-  legend,
   series,
   registerSeries,
   isSeriesHidden,
@@ -82,17 +81,7 @@ registerSeries({
   yAxisId: props.yAxisId
 })
 
-const seriesIndex = computed(() =>
-  Math.max(
-    0,
-    series.findIndex((s) => s.dataKey === props.dataKey)
-  )
-)
-const dimmed = computed(
-  () =>
-    (props.showHighlight && hover.active) ||
-    (legend.hoveredIndex !== null && legend.hoveredIndex !== seriesIndex.value)
-)
+const dimmed = computed(() => props.showHighlight && hover.active)
 
 const markerPoints = computed(() =>
   props.showMarkers

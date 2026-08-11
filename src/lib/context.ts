@@ -84,10 +84,7 @@ export interface ChartContextValue {
     stackBase: (datum: ChartDatum, dataKey: string) => number
   }
   hover: Readonly<HoverState>
-  /** Series index the Legend is hovering (dims the others). Null when idle. */
-  legend: Readonly<{ hoveredIndex: number | null }>
-  setLegendHover: (index: number | null) => void
-  /** Series dataKeys hidden via the Legend (click to toggle). */
+  /** Series dataKeys hidden from the chart. Toggled programmatically via toggleSeries. */
   hiddenKeys: Readonly<Set<string>>
   isSeriesHidden: (dataKey: string) => boolean
   toggleSeries: (dataKey: string) => void
