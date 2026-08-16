@@ -41,12 +41,17 @@ const xScale = computed(() =>
     .paddingOuter(props.barGap)
 )
 
+// A row need not carry every series' key; summing an undefined into the stack would poison the
+// whole domain with NaN.
+const numeric = (datum: ChartDatum, key: string): number =>
+  typeof datum[key] === 'number' ? (datum[key] as number) : 0
+
 const yScales = makeYScales((keys) => {
   const hi =
     max(props.data, (d) =>
       props.stacked
-        ? keys.reduce((sum, k) => sum + (d[k] as number), 0)
-        : max(keys, (k) => d[k] as number)
+        ? keys.reduce((sum, k) => sum + numeric(d, k), 0)
+        : max(keys, (k) => numeric(d, k))
     ) ?? 1
   return [0, hi * 1.1]
 })
@@ -60,7 +65,7 @@ function stackBase(datum: ChartDatum, dataKey: string): number {
     if (s.dataKey === dataKey) {
       break
     }
-    sum += (datum[s.dataKey] as number) ?? 0
+    sum += numeric(datum, s.dataKey)
   }
   return sum
 }

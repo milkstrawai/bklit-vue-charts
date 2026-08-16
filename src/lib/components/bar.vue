@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { motion } from 'motion-v'
-import { computed, onMounted, shallowRef } from 'vue'
+import { computed, onMounted, onScopeDispose, shallowRef } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import { DEFAULT_ANIMATION_DURATION_MS, DEFAULT_ANIMATION_EASING } from '../utils/animation'
@@ -9,6 +9,8 @@ interface BarProps {
   dataKey: string
   /** Y-scale group for biaxial charts (pair with a matching YAxis). */
   yAxisId?: string
+  /** Stacking, grouping, and legend position. Set it when the series set changes at runtime. */
+  order?: number
   fill?: string
   /** Bar end caps: "round", "butt", or a custom radius in px. Default: "round" */
   lineCap?: 'round' | 'butt' | number
@@ -47,6 +49,7 @@ const {
   hover,
   series,
   registerSeries,
+  unregisterSeries,
   isSeriesHidden,
   bar: barConfig
 } = useChart()
@@ -90,6 +93,7 @@ function barX(datum: ChartDatum): number {
 registerSeries({
   kind: 'bar',
   dataKey: props.dataKey,
+  order: props.order,
   color: props.fill,
   yAxisId: props.yAxisId,
   dotX: (datum: ChartDatum) => barX(datum) + barWidth.value / 2,
@@ -98,6 +102,7 @@ registerSeries({
     return yScale.value(base + (datum[props.dataKey] as number))
   }
 })
+onScopeDispose(() => unregisterSeries(props.dataKey))
 
 const bars = computed(() =>
   data.value.map((datum, i) => {

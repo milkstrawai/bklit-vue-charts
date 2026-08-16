@@ -25,6 +25,12 @@ export interface LineConfig {
   kind?: 'line' | 'area' | 'bar'
   /** Y-scale group; pairs with a matching YAxis. Default: "left". */
   yAxisId?: string
+  /**
+   * Position among sibling series — stacking order, grouped-bar order, and legend order. Give
+   * every series one when the rendered set changes at runtime, otherwise the registry keeps them
+   * in mount order and a series that leaves and comes back reappears last.
+   */
+  order?: number
   /** Overrides the tooltip dot x (bars center the dot on their own bar). */
   dotX?: (datum: ChartDatum) => number
   /** Overrides the tooltip dot y (e.g. stacked bars). */
@@ -92,6 +98,8 @@ export interface ChartContextValue {
   containerWidth: Ref<number>
   series: readonly LineConfig[]
   registerSeries: (entry: LineConfig) => void
+  /** Withdraws a series on unmount so the registry only ever holds rendered ones. */
+  unregisterSeries: (dataKey: string) => void
   /** Series components clip themselves to this — grid/axis stay unclipped. */
   revealClipId?: string
 }

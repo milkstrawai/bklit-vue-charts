@@ -2,7 +2,7 @@
 import { area, curveMonotoneX, line } from 'd3-shape'
 import type { CurveFactory } from 'd3-shape'
 import { AnimatePresence, motion } from 'motion-v'
-import { computed, useId } from 'vue'
+import { computed, onScopeDispose, useId } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum, SeriesPointMarkerStyle } from '../context'
 import { HIGHLIGHT_SPRING, useHighlightSegment } from '../composables/use-highlight-segment'
@@ -11,6 +11,8 @@ interface AreaProps {
   dataKey: string
   /** Y-scale group for biaxial charts (pair with a matching YAxis). */
   yAxisId?: string
+  /** Stacking, grouping, and legend position. Set it when the series set changes at runtime. */
+  order?: number
   /** D3 curve factory. Default: curveMonotoneX */
   curve?: CurveFactory
   /** Fill color. Default: var(--chart-line-primary) */
@@ -65,6 +67,7 @@ const {
   hover,
   series,
   registerSeries,
+  unregisterSeries,
   isSeriesHidden,
   revealClipId
 } = useChart()
@@ -77,9 +80,11 @@ const midOffset = computed(() => `${Math.min(1, Math.max(0.01, props.gradientSpa
 registerSeries({
   kind: 'area',
   dataKey: props.dataKey,
+  order: props.order,
   color: resolvedStroke.value,
   yAxisId: props.yAxisId
 })
+onScopeDispose(() => unregisterSeries(props.dataKey))
 
 const dimmed = computed(() => props.showHighlight && hover.active)
 

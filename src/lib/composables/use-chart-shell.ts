@@ -97,8 +97,23 @@ export function useChartShell(props: ChartShellProps, options: ChartShellOptions
 
   const series = reactive<LineConfig[]>([])
   function registerSeries(entry: LineConfig): void {
-    if (!series.some((s) => s.dataKey === entry.dataKey)) {
-      series.push(entry)
+    if (series.some((s) => s.dataKey === entry.dataKey)) {
+      return
+    }
+    // Ordered series slot into place so the stack survives one of them unmounting and coming
+    // back; unordered ones keep the old append-on-mount behaviour.
+    const rank = entry.order ?? Number.POSITIVE_INFINITY
+    const at = series.findIndex((s) => (s.order ?? Number.POSITIVE_INFINITY) > rank)
+    series.splice(at < 0 ? series.length : at, 0, entry)
+  }
+
+  // Series components withdraw on unmount, so the registry tracks the rendered set the way the
+  // React original's `lines` prop does. Left in, a stale key drags a missing column into the
+  // y-domain and the legend, forcing consumers to remount the chart to change their series.
+  function unregisterSeries(dataKey: string): void {
+    const index = series.findIndex((s) => s.dataKey === dataKey)
+    if (index >= 0) {
+      series.splice(index, 1)
     }
   }
 
@@ -198,6 +213,7 @@ export function useChartShell(props: ChartShellProps, options: ChartShellOptions
       status: computed(() => props.status),
       series: readonly(series) as readonly LineConfig[],
       registerSeries,
+      unregisterSeries,
       ...scales
     })
   }
