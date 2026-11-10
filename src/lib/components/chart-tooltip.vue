@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useElementSize } from '@vueuse/core'
 import { AnimatePresence, motion } from 'motion-v'
-import { computed, useId } from 'vue'
+import { computed, useId, useTemplateRef } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import DateTicker from '../components/date-ticker.vue'
@@ -134,13 +135,19 @@ const tickerLabels = computed(() => data.value.map((d) => xLabel(xAccessor(d))))
 const crosshairGradientId = `tooltip-indicator-${useId()}`
 
 const PANEL_OFFSET = 16
-const PANEL_WIDTH = 180
+
+const tooltipRef = useTemplateRef('tooltipRef')
+const { width: tooltipWidth } = useElementSize(tooltipRef)
+
+// Fallback until the panel has been measured, matching the upstream default.
+const panelWidth = computed(() => tooltipWidth.value || 180)
+
 const isFlipped = computed(
-  () => hover.x + margin.value.left + PANEL_WIDTH + PANEL_OFFSET > containerWidth.value
+  () => hover.x + margin.value.left + panelWidth.value + PANEL_OFFSET > containerWidth.value
 )
 const panelX = computed(() => {
   const anchor = hover.x + margin.value.left
-  return isFlipped.value ? anchor - PANEL_OFFSET - PANEL_WIDTH : anchor + PANEL_OFFSET
+  return isFlipped.value ? anchor - PANEL_OFFSET - panelWidth.value : anchor + PANEL_OFFSET
 })
 const panelTop = computed(() => margin.value.top)
 const panelSpring = computed(() => (props.matchCrosshair ? INDICATOR_SPRING : BOX_SPRING))
@@ -206,6 +213,7 @@ const pillX = computed(() => hover.x + margin.value.left)
       <AnimatePresence>
         <motion.div
           v-if="datum"
+          ref="tooltipRef"
           class="tooltip-pos"
           :style="{ top: `${panelTop}px` }"
           :initial="{ opacity: 0, x: panelX }"
