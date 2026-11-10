@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
+import { useResizeObserver } from '@vueuse/core'
 import { AnimatePresence, motion } from 'motion-v'
-import { computed, useId, useTemplateRef } from 'vue'
+import { computed, ref, useId, useTemplateRef } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import DateTicker from '../components/date-ticker.vue'
@@ -140,10 +140,15 @@ const PANEL_OFFSET = 16
 const PANEL_EDGE_PADDING = 8
 
 const tooltipRef = useTemplateRef('tooltipRef')
-const { width: tooltipWidth } = useElementSize(tooltipRef)
 
-// Fallback until the panel has been measured, matching the upstream default.
-const panelWidth = computed(() => tooltipWidth.value || 180)
+// Last measured panel width; it survives the panel re-mounting on every hover.
+// 180, the upstream default, is only the first-hover guess.
+const panelWidth = ref(180)
+useResizeObserver(tooltipRef, ([entry]) => {
+  if (entry.contentRect.width > 0) {
+    panelWidth.value = entry.contentRect.width
+  }
+})
 
 const placement = computed(() =>
   placeTooltipX({
