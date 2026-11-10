@@ -6,6 +6,7 @@ import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import DateTicker from '../components/date-ticker.vue'
 import { intFmt, longXLabel, xLabel } from '../utils/chart-formatters'
+import { placeTooltipX } from '../utils/tooltip-placement'
 
 export interface TooltipRow {
   color: string
@@ -135,6 +136,8 @@ const tickerLabels = computed(() => data.value.map((d) => xLabel(xAccessor(d))))
 const crosshairGradientId = `tooltip-indicator-${useId()}`
 
 const PANEL_OFFSET = 16
+// Gap kept between the panel and the container edges.
+const PANEL_EDGE_PADDING = 8
 
 const tooltipRef = useTemplateRef('tooltipRef')
 const { width: tooltipWidth } = useElementSize(tooltipRef)
@@ -142,13 +145,17 @@ const { width: tooltipWidth } = useElementSize(tooltipRef)
 // Fallback until the panel has been measured, matching the upstream default.
 const panelWidth = computed(() => tooltipWidth.value || 180)
 
-const isFlipped = computed(
-  () => hover.x + margin.value.left + panelWidth.value + PANEL_OFFSET > containerWidth.value
+const placement = computed(() =>
+  placeTooltipX({
+    anchor: hover.x + margin.value.left,
+    width: panelWidth.value,
+    containerWidth: containerWidth.value,
+    offset: PANEL_OFFSET,
+    padding: PANEL_EDGE_PADDING
+  })
 )
-const panelX = computed(() => {
-  const anchor = hover.x + margin.value.left
-  return isFlipped.value ? anchor - PANEL_OFFSET - panelWidth.value : anchor + PANEL_OFFSET
-})
+const isFlipped = computed(() => placement.value.flipped)
+const panelX = computed(() => placement.value.x)
 const panelTop = computed(() => margin.value.top)
 const panelSpring = computed(() => (props.matchCrosshair ? INDICATOR_SPRING : BOX_SPRING))
 
