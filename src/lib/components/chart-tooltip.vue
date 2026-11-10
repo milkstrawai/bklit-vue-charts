@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core'
+import { useResizeObserver } from '@vueuse/core'
 import { AnimatePresence, motion } from 'motion-v'
-import { computed, useId, useTemplateRef } from 'vue'
+import { computed, ref, useId, useTemplateRef } from 'vue'
 import { useChart } from '../composables/use-chart'
 import type { ChartDatum } from '../context'
 import DateTicker from '../components/date-ticker.vue'
 import { intFmt, longXLabel, xLabel } from '../utils/chart-formatters'
+import { placeTooltipX } from '../utils/tooltip-placement'
 
 export interface TooltipRow {
   color: string
@@ -135,20 +136,31 @@ const tickerLabels = computed(() => data.value.map((d) => xLabel(xAccessor(d))))
 const crosshairGradientId = `tooltip-indicator-${useId()}`
 
 const PANEL_OFFSET = 16
+// Gap kept between the panel and the container edges.
+const PANEL_EDGE_PADDING = 8
 
 const tooltipRef = useTemplateRef('tooltipRef')
-const { width: tooltipWidth } = useElementSize(tooltipRef)
 
-// Fallback until the panel has been measured, matching the upstream default.
-const panelWidth = computed(() => tooltipWidth.value || 180)
-
-const isFlipped = computed(
-  () => hover.x + margin.value.left + panelWidth.value + PANEL_OFFSET > containerWidth.value
-)
-const panelX = computed(() => {
-  const anchor = hover.x + margin.value.left
-  return isFlipped.value ? anchor - PANEL_OFFSET - panelWidth.value : anchor + PANEL_OFFSET
+// Last measured panel width; it survives the panel re-mounting on every hover.
+// 180, the upstream default, is only the first-hover guess.
+const panelWidth = ref(180)
+useResizeObserver(tooltipRef, ([entry]) => {
+  if (entry.contentRect.width > 0) {
+    panelWidth.value = entry.contentRect.width
+  }
 })
+
+const placement = computed(() =>
+  placeTooltipX({
+    anchor: hover.x + margin.value.left,
+    width: panelWidth.value,
+    containerWidth: containerWidth.value,
+    offset: PANEL_OFFSET,
+    padding: PANEL_EDGE_PADDING
+  })
+)
+const isFlipped = computed(() => placement.value.flipped)
+const panelX = computed(() => placement.value.x)
 const panelTop = computed(() => margin.value.top)
 const panelSpring = computed(() => (props.matchCrosshair ? INDICATOR_SPRING : BOX_SPRING))
 
